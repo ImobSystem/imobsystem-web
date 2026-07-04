@@ -1,0 +1,90 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { authService } from "@/services/auth";
+import { clearSession, tokenStorage, userStorage } from "@/services/storage";
+import type { Usuario } from "@/types";
+
+interface AuthContextValue {
+  /** Usuário autenticado, ou null se ninguém logado. */
+  user: Usuario | null;
+  /** Token JWT atual, ou null. */
+  token: string | null;
+  /** true enquanto restauramos a sessão do localStorage no primeiro render. */
+  loading: boolean;
+  /** Atalho derivado: existe uma sessão ativa? */
+  isAuthenticated: boolean;
+  login: (email: string, senha: string) => Promise<void>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<Usuario | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * Ao montar, tentamos reidratar a sessão a partir do localStorage.
+   * Isso permite que a sessão sobreviva a um refresh (F5) da página.
+   * `loading` cobre esse intervalo para evitar "piscar" a tela de login.
+   */
+  useEffect(() => {
+    const storedToken = tokenStorage.get();
+    const storedUser = userStorage.get();
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(storedUser);
+    }
+    setLoading(false);
+  }, []);
+
+  const login = useCallback(async (email: string, senha: string) => {
+    // Deixamos o erro do axios propagar; a tela de login o traduz para o usuário.
+    const data = await authService.login({ email, senha });
+    const usuario: Usuario = { email: data.email, perfil: data.perfil };
+
+    tokenStorage.set(data.token);
+    userStorage.set(usuario);
+    setToken(data.token);
+    setUser(usuario);
+  }, []);
+
+  const logout = useCallback(() => {
+    clearSession();
+    setToken(null);
+    setUser(null);
+  }, []);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      token,
+      loading,
+      isAuthenticated: Boolean(token),
+      login,
+      logout,
+    }),
+    [user, token, loading, login, logout],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+/** Hook de acesso ao contexto — garante uso dentro do provider. */
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error("useAuth deve ser usado dentro de <AuthProvider>.");
+  }
+  return ctx;
+}
