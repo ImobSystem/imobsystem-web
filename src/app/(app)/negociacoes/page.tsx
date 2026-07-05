@@ -124,14 +124,16 @@ export default function NegociacoesPage() {
           <ErrorState message={error} onRetry={load} />
         </Card>
       ) : (
-        // Funil: colunas roláveis horizontalmente quando não cabem na tela.
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        // Funil em grid responsivo: todas as colunas cabem na largura da tela
+        // (6 numa linha em telas largas), quebrando para menos colunas quando
+        // estreito — sem rolagem horizontal.
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {STATUS_NEGOCIO_OPTIONS.map((status) => {
             const items = byStatus.get(status) ?? [];
             return (
               <div
                 key={status}
-                className="flex w-72 shrink-0 flex-col rounded-2xl bg-slate-50/80 ring-1 ring-slate-200 dark:bg-slate-900/60 dark:ring-slate-800"
+                className="flex min-w-0 flex-col rounded-2xl bg-slate-50/80 ring-1 ring-slate-200 dark:bg-slate-900/60 dark:ring-slate-800"
               >
                 {/* Cabeçalho da coluna */}
                 <div className="flex items-center gap-2 px-4 pt-4">
