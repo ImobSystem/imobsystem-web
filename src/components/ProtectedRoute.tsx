@@ -26,7 +26,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (loading || !isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div
           className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-primary-600 dark:border-slate-700 dark:border-t-primary-500"
           role="status"

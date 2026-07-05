@@ -88,7 +88,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white transition-colors md:flex dark:border-slate-800 dark:bg-slate-900">
+    <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-surface transition-colors md:flex dark:border-slate-800">
       {/* Marca */}
       <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">

@@ -41,7 +41,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12 transition-colors dark:bg-slate-950">
+    <main className="relative flex min-h-screen items-center justify-center bg-background px-4 py-12 transition-colors">
       {/* Alternador de tema no canto */}
       <div className="absolute right-4 top-4">
         <ThemeToggle />
@@ -62,7 +62,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-2xl border border-slate-200 bg-surface p-8 shadow-sm dark:border-slate-800">
           <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">
             Entrar na sua conta
           </h2>

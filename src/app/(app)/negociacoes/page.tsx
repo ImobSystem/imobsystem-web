@@ -159,7 +159,7 @@ export default function NegociacoesPage() {
                       return (
                         <div
                           key={n.id}
-                          className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-800/60"
+                          className="rounded-xl border border-slate-200 bg-surface p-3 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-800/60"
                         >
                           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                             {formatCurrency(n.valor)}

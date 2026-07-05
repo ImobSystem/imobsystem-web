@@ -22,7 +22,7 @@ export function Header() {
   const initial = user?.email?.charAt(0).toUpperCase() ?? "?";
 
   return (
-    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 transition-colors dark:border-slate-800 dark:bg-slate-900">
+    <header className="flex items-center justify-between border-b border-slate-200 bg-surface px-6 py-3 transition-colors dark:border-slate-800">
       {/* Marca compacta (aparece no mobile, onde a sidebar some). */}
       <div className="flex items-center gap-2 md:hidden">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
