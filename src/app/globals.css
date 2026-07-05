@@ -18,6 +18,32 @@
   --foreground: #e2e8f0; /* slate-200 */
 }
 
+/*
+ * ============================================================
+ *  COR DE MARCA (PRIMARY) — o "um lugar só" para trocar no futuro.
+ * ============================================================
+ * Toda a UI usa as classes `primary-*` (bg-primary-600, text-primary-700,
+ * focus:ring-primary-500/50, ...). Para mudar a identidade visual do sistema
+ * inteiro, basta reescrever os hex abaixo — nada nos componentes precisa mudar.
+ *
+ * Paleta atual: roxo (escala "violet"). Tons-chave:
+ *   primary-600 #7C3AED (padrão)  · primary-700 #6D28D9 (hover)
+ *   primary-800 #5B21B6 (escuro)  · primary-100 #EDE9FE (fundos sutis)
+ *   primary-300 #C4B5FD (bordas/realces)
+ */
+@theme {
+  --color-primary-50: #f5f3ff;
+  --color-primary-100: #ede9fe;
+  --color-primary-200: #ddd6fe;
+  --color-primary-300: #c4b5fd;
+  --color-primary-400: #a78bfa;
+  --color-primary-500: #8b5cf6;
+  --color-primary-600: #7c3aed;
+  --color-primary-700: #6d28d9;
+  --color-primary-800: #5b21b6;
+  --color-primary-900: #4c1d95;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -16,8 +16,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  */
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-emerald-600/20 " +
-    "hover:from-emerald-500 hover:to-emerald-700 hover:shadow-emerald-600/30 focus:ring-emerald-500/50",
+    "bg-gradient-to-b from-primary-500 to-primary-600 text-white shadow-primary-600/20 " +
+    "hover:from-primary-500 hover:to-primary-700 hover:shadow-primary-600/30 focus:ring-primary-500/50",
   danger:
     "bg-gradient-to-b from-red-500 to-red-600 text-white shadow-red-600/20 " +
     "hover:from-red-500 hover:to-red-700 hover:shadow-red-600/30 focus:ring-red-500/50",

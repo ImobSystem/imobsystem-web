@@ -25,7 +25,7 @@ export function Header() {
     <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 transition-colors dark:border-slate-800 dark:bg-slate-900">
       {/* Marca compacta (aparece no mobile, onde a sidebar some). */}
       <div className="flex items-center gap-2 md:hidden">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
           I
         </div>
         <span className="font-semibold text-slate-900 dark:text-white">
@@ -45,7 +45,7 @@ export function Header() {
             </p>
           )}
         </div>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
           {initial}
         </div>
         <button

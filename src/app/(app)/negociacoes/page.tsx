@@ -26,7 +26,7 @@ const COLUMN_ACCENT: Record<StatusNegocio, string> = {
   EM_ATENDIMENTO: "bg-blue-500",
   VISITA_AGENDADA: "bg-violet-500",
   PROPOSTA: "bg-amber-500",
-  GANHO: "bg-emerald-500",
+  GANHO: "bg-green-500",
   PERDIDO: "bg-red-500",
 };
 
@@ -181,7 +181,7 @@ export default function NegociacoesPage() {
                                 e.target.value as StatusNegocio,
                               )
                             }
-                            className="mt-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs text-slate-600 outline-none transition focus:border-emerald-500 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:[color-scheme:dark]"
+                            className="mt-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs text-slate-600 outline-none transition focus:border-primary-500 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:[color-scheme:dark]"
                             aria-label="Mover para outro status"
                           >
                             {STATUS_NEGOCIO_OPTIONS.map((s) => (

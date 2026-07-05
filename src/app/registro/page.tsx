@@ -132,7 +132,7 @@ export default function RegistroPage() {
       <div className="w-full max-w-lg">
         {/* Marca */}
         <div className="mb-8 text-center">
-          <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-xl font-bold text-white shadow-sm">
+          <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-xl font-bold text-white shadow-sm">
             I
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
@@ -271,7 +271,7 @@ export default function RegistroPage() {
           Já tem conta?{" "}
           <Link
             href="/login"
-            className="font-medium text-emerald-600 transition hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+            className="font-medium text-primary-600 transition hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
             Fazer login
           </Link>

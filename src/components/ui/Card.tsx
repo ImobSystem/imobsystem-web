@@ -36,7 +36,7 @@ export function StatCard({
           {label}
         </p>
         {icon && (
-          <span className="text-emerald-600 dark:text-emerald-400">{icon}</span>
+          <span className="text-primary-600 dark:text-primary-400">{icon}</span>
         )}
       </div>
       {loading ? (
