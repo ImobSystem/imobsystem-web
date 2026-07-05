@@ -82,7 +82,7 @@ export default function ImoveisPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                 <tr>
                   <th className="px-5 py-3 font-medium">Endereço</th>
                   <th className="px-5 py-3 font-medium">Área</th>
@@ -91,19 +91,22 @@ export default function ImoveisPage() {
                   <th className="px-5 py-3 text-right font-medium">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {imoveis.map((imovel) => (
-                  <tr key={imovel.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
+                  <tr
+                    key={imovel.id}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                  >
+                    <td className="px-5 py-3 font-medium text-slate-900 dark:text-slate-100">
                       {imovel.endereco}
-                      <span className="block text-xs font-normal text-slate-400">
+                      <span className="block text-xs font-normal text-slate-400 dark:text-slate-500">
                         {imovel.CEP}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-slate-600">
+                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
                       {imovel.area_m2} m²
                     </td>
-                    <td className="px-5 py-3 text-slate-600">
+                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
                       {FINALIDADE_LABELS[imovel.finalidade]}
                     </td>
                     <td className="px-5 py-3">
@@ -115,7 +118,7 @@ export default function ImoveisPage() {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => openEdit(imovel)}
-                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                         >
                           Editar
                         </button>
@@ -124,7 +127,7 @@ export default function ImoveisPage() {
                             setDeleteError(null);
                             setToDelete(imovel);
                           }}
-                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                         >
                           Excluir
                         </button>

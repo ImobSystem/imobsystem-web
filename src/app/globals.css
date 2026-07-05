@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/*
+ * Dark mode manual (baseado em classe, não em prefers-color-scheme).
+ * Este custom-variant faz o `dark:` do Tailwind v4 valer sempre que o
+ * elemento estiver dentro de um ancestral com a classe `.dark` — que
+ * o ThemeProvider aplica/remove no <html>.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f1f5f9; /* slate-100 */
   --foreground: #0f172a; /* slate-900 */
+}
+
+.dark {
+  --background: #020617; /* slate-950 */
+  --foreground: #e2e8f0; /* slate-200 */
 }
 
 @theme inline {
@@ -16,4 +29,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* Suaviza a troca de tema. */
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

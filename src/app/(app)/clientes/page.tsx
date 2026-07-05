@@ -76,7 +76,7 @@ export default function ClientesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                 <tr>
                   <th className="px-5 py-3 font-medium">Nome</th>
                   <th className="px-5 py-3 font-medium">CPF</th>
@@ -86,15 +86,24 @@ export default function ClientesPage() {
                   <th className="px-5 py-3 text-right font-medium">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {clientes.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium text-slate-900">
+                  <tr
+                    key={c.id}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                  >
+                    <td className="px-5 py-3 font-medium text-slate-900 dark:text-slate-100">
                       {c.nome}
                     </td>
-                    <td className="px-5 py-3 text-slate-600">{c.cpf}</td>
-                    <td className="px-5 py-3 text-slate-600">{c.email}</td>
-                    <td className="px-5 py-3 text-slate-600">{c.telefone}</td>
+                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
+                      {c.cpf}
+                    </td>
+                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
+                      {c.email}
+                    </td>
+                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
+                      {c.telefone}
+                    </td>
                     <td className="px-5 py-3">
                       <Badge tone={TIPO_CLIENTE_TONE[c.tipoCliente]}>
                         {TIPO_CLIENTE_LABELS[c.tipoCliente]}
@@ -104,7 +113,7 @@ export default function ClientesPage() {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => openEdit(c)}
-                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                         >
                           Editar
                         </button>
@@ -113,7 +122,7 @@ export default function ClientesPage() {
                             setDeleteError(null);
                             setToDelete(c);
                           }}
-                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                         >
                           Excluir
                         </button>

@@ -113,25 +113,25 @@ export default function DashboardPage() {
 
       {/* Resumo: últimas negociações */}
       <div className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold text-slate-900">
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
           Últimas negociações
         </h2>
         <Card className="overflow-hidden">
           {loading ? (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4 px-5 py-4">
-                  <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
-                  <div className="ml-auto h-4 w-20 animate-pulse rounded bg-slate-200" />
+                  <div className="h-4 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                  <div className="ml-auto h-4 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
                 </div>
               ))}
             </div>
           ) : recentes.length === 0 ? (
-            <p className="px-5 py-8 text-center text-sm text-slate-500">
+            <p className="px-5 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
               Nenhuma negociação cadastrada ainda.
             </p>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
               {recentes.map((n) => {
                 const imovel = imovelById.get(n.imovelId);
                 const cliente = clienteById.get(n.clienteId);
@@ -141,16 +141,16 @@ export default function DashboardPage() {
                     className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-slate-900">
+                      <p className="truncate font-medium text-slate-900 dark:text-slate-100">
                         {imovel?.endereco ?? `Imóvel #${n.imovelId}`}
                       </p>
-                      <p className="truncate text-sm text-slate-500">
+                      <p className="truncate text-sm text-slate-500 dark:text-slate-400">
                         {cliente?.nome ?? `Cliente #${n.clienteId}`} ·{" "}
                         {formatDate(n.dataInicio)}
                       </p>
                     </div>
                     <div className="ml-auto flex items-center gap-3">
-                      <span className="text-sm font-semibold text-slate-900">
+                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {formatCurrency(n.valor)}
                       </span>
                       <Badge tone={STATUS_NEGOCIO_TONE[n.statusNegocio]}>

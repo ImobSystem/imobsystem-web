@@ -8,6 +8,7 @@ import { authService } from "@/services/auth";
 import { getErrorMessage } from "@/services/errors";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import type { RegistroRequest, Usuario } from "@/types";
 
 /** Campos do formulário: o payload da API + confirmação de senha (só no front). */
@@ -122,27 +123,32 @@ export default function RegistroPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12">
+    <main className="relative flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12 transition-colors dark:bg-slate-950">
+      {/* Alternador de tema no canto */}
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-lg">
         {/* Marca */}
         <div className="mb-8 text-center">
           <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-xl font-bold text-white shadow-sm">
             I
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
             ImobSystem
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Crie a conta da sua imobiliária
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
             {/* Seção 1 — Dados da imobiliária */}
             <section className="flex flex-col gap-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Dados da imobiliária
               </h2>
               <Input
@@ -186,8 +192,8 @@ export default function RegistroPage() {
             </section>
 
             {/* Seção 2 — Conta do administrador */}
-            <section className="flex flex-col gap-4 border-t border-slate-100 pt-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <section className="flex flex-col gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Sua conta de administrador
               </h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -249,7 +255,7 @@ export default function RegistroPage() {
             {apiError && (
               <div
                 role="alert"
-                className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
+                className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
               >
                 {apiError}
               </div>
@@ -261,11 +267,11 @@ export default function RegistroPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
           Já tem conta?{" "}
           <Link
             href="/login"
-            className="font-medium text-emerald-600 transition hover:text-emerald-700"
+            className="font-medium text-emerald-600 transition hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
           >
             Fazer login
           </Link>

@@ -4,8 +4,8 @@ import { Button } from "./Button";
 /** Spinner centralizado para estados de carregamento. */
 export function LoadingState({ label = "Carregando..." }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-500">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600" />
+    <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-500 dark:text-slate-400">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600 dark:border-slate-700 dark:border-t-emerald-500" />
       <p className="text-sm">{label}</p>
     </div>
   );
@@ -23,9 +23,13 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-      <p className="text-base font-medium text-slate-700">{title}</p>
+      <p className="text-base font-medium text-slate-700 dark:text-slate-200">
+        {title}
+      </p>
       {description && (
-        <p className="max-w-sm text-sm text-slate-500">{description}</p>
+        <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
+          {description}
+        </p>
       )}
       {action && <div className="mt-3">{action}</div>}
     </div>
@@ -42,9 +46,11 @@ export function ErrorState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-      <p className="max-w-md text-sm text-red-600">{message}</p>
+      <p className="max-w-md text-sm text-red-600 dark:text-red-400">
+        {message}
+      </p>
       {onRetry && (
-        <Button onClick={onRetry} className="bg-slate-800 hover:bg-slate-900">
+        <Button variant="neutral" onClick={onRetry}>
           Tentar novamente
         </Button>
       )}

@@ -13,7 +13,7 @@ import { Header } from "@/components/layout/Header";
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen bg-slate-100">
+      <div className="flex min-h-screen bg-slate-100 transition-colors dark:bg-slate-950">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header />

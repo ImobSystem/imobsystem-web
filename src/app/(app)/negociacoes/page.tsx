@@ -131,17 +131,17 @@ export default function NegociacoesPage() {
             return (
               <div
                 key={status}
-                className="flex w-72 shrink-0 flex-col rounded-2xl bg-slate-50/80 ring-1 ring-slate-200"
+                className="flex w-72 shrink-0 flex-col rounded-2xl bg-slate-50/80 ring-1 ring-slate-200 dark:bg-slate-900/60 dark:ring-slate-800"
               >
                 {/* Cabeçalho da coluna */}
                 <div className="flex items-center gap-2 px-4 pt-4">
                   <span
                     className={`h-2.5 w-2.5 rounded-full ${COLUMN_ACCENT[status]}`}
                   />
-                  <h3 className="text-sm font-semibold text-slate-700">
+                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                     {STATUS_NEGOCIO_LABELS[status]}
                   </h3>
-                  <span className="ml-auto rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
+                  <span className="ml-auto rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                     {items.length}
                   </span>
                 </div>
@@ -149,7 +149,7 @@ export default function NegociacoesPage() {
                 {/* Cards */}
                 <div className="flex flex-1 flex-col gap-3 p-4">
                   {items.length === 0 ? (
-                    <p className="py-6 text-center text-xs text-slate-400">
+                    <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
                       Nenhuma negociação
                     </p>
                   ) : (
@@ -159,15 +159,15 @@ export default function NegociacoesPage() {
                       return (
                         <div
                           key={n.id}
-                          className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                          className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-800/60"
                         >
-                          <p className="text-sm font-semibold text-slate-900">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                             {formatCurrency(n.valor)}
                           </p>
-                          <p className="mt-1 truncate text-sm text-slate-700">
+                          <p className="mt-1 truncate text-sm text-slate-700 dark:text-slate-300">
                             {imovel?.endereco ?? `Imóvel #${n.imovelId}`}
                           </p>
-                          <p className="truncate text-xs text-slate-500">
+                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                             {cliente?.nome ?? `Cliente #${n.clienteId}`}
                           </p>
 
@@ -181,7 +181,7 @@ export default function NegociacoesPage() {
                                 e.target.value as StatusNegocio,
                               )
                             }
-                            className="mt-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs text-slate-600 outline-none transition focus:border-emerald-500 disabled:opacity-60"
+                            className="mt-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs text-slate-600 outline-none transition focus:border-emerald-500 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:[color-scheme:dark]"
                             aria-label="Mover para outro status"
                           >
                             {STATUS_NEGOCIO_OPTIONS.map((s) => (

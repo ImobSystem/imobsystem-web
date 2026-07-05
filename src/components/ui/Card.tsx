@@ -10,7 +10,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-slate-200 bg-white shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900 ${className}`}
     >
       {children}
     </div>
@@ -32,13 +32,19 @@ export function StatCard({
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-        {icon && <span className="text-emerald-600">{icon}</span>}
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+          {label}
+        </p>
+        {icon && (
+          <span className="text-emerald-600 dark:text-emerald-400">{icon}</span>
+        )}
       </div>
       {loading ? (
-        <div className="mt-3 h-8 w-16 animate-pulse rounded bg-slate-200" />
+        <div className="mt-3 h-8 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
       ) : (
-        <p className="mt-2 text-3xl font-semibold text-slate-900">{value}</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
+          {value}
+        </p>
       )}
     </Card>
   );

@@ -19,9 +19,9 @@ export default function HomePage() {
   }, [loading, isAuthenticated, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
       <div
-        className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600"
+        className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600 dark:border-slate-700 dark:border-t-emerald-500"
         role="status"
         aria-label="Carregando"
       />
