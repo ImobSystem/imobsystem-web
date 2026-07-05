@@ -1,17 +1,27 @@
 /**
  * Tipos de domínio compartilhados por toda a aplicação.
  *
- * Mantemos aqui os contratos que espelham o que a API (Spring Boot) devolve,
- * para que services, contexts e componentes falem sempre a mesma "língua".
+ * Espelham o contrato da API (Spring Boot). Para cada recurso mantemos:
+ *  - a entidade (o que o GET devolve, com `id` e `imobiliariaId`);
+ *  - o *Input (o que o POST/PUT recebe — sem campos derivados do token).
+ *
+ * Os enums são unions de string + arrays `*_OPTIONS` (para popular selects)
+ * + mapas `*_LABELS` (para exibição amigável).
  */
+
+/* ============================ Auth ============================ */
 
 /** Perfis de acesso suportados pelo backend. */
 export type Perfil = "ADMIN" | "CORRETOR";
 
-/** Usuário autenticado — o que guardamos em memória/contexto após o login. */
+/**
+ * Usuário autenticado guardado no contexto/localStorage.
+ * `imobiliariaId` é extraído do JWT (não vem no corpo do login).
+ */
 export interface Usuario {
   email: string;
   perfil: Perfil;
+  imobiliariaId: number | null;
 }
 
 /** Corpo enviado no POST /auth/login. */
@@ -27,41 +37,161 @@ export interface LoginResponse {
   perfil: Perfil;
 }
 
-/* ------------------------------------------------------------------ *
- * Entidades de negócio (placeholders para os próximos CRUDs).
- * Ainda não consumidas, mas já tipadas para acelerar as telas futuras.
- * ------------------------------------------------------------------ */
+/* ============================ Imóveis ============================ */
+
+export type Finalidade = "ALUGUEL" | "VENDA";
+export type StatusImovel = "DISPONIVEL" | "NEGOCIANDO" | "FECHADO";
+
+export interface Imovel {
+  id: number;
+  endereco: string;
+  CEP: string;
+  area_m2: number;
+  finalidade: Finalidade;
+  statusImovel: StatusImovel;
+  imobiliariaId: number;
+}
+
+/** Corpo de POST/PUT /imoveis (sem imobiliariaId/corretor — vêm do token). */
+export interface ImovelInput {
+  endereco: string;
+  CEP: string;
+  area_m2: number;
+  finalidade: Finalidade;
+  statusImovel: StatusImovel;
+}
+
+/* ============================ Corretores ============================ */
 
 export interface Corretor {
   id: number;
   nome: string;
   email: string;
-  telefone?: string;
+  creci: string;
   perfil: Perfil;
+  imobiliariaId: number;
 }
 
-export interface Imovel {
-  id: number;
-  titulo: string;
-  descricao?: string;
-  tipo: string;
-  preco: number;
-  endereco: string;
-  disponivel: boolean;
+/** Corpo de POST /corretores/cadastrar (ainda exige imobiliariaId no body). */
+export interface CorretorInput {
+  nome: string;
+  email: string;
+  senha: string;
+  creci: string;
+  perfil: Perfil;
+  imobiliariaId: number;
 }
+
+/* ============================ Clientes ============================ */
+
+export type TipoCliente = "COMPRADOR" | "LOCATARIO" | "PROPRIETARIO";
 
 export interface Cliente {
   id: number;
   nome: string;
+  cpf: string;
   email: string;
-  telefone?: string;
+  telefone: string;
+  tipoCliente: TipoCliente;
+  imobiliariaId: number;
 }
+
+/** Corpo de POST/PUT /clientes (sem imobiliariaId/corretor — vêm do token). */
+export interface ClienteInput {
+  nome: string;
+  cpf: string;
+  email: string;
+  telefone: string;
+  tipoCliente: TipoCliente;
+}
+
+/* ============================ Negociações ============================ */
+
+export type StatusNegocio =
+  | "OPORTUNIDADE"
+  | "EM_ATENDIMENTO"
+  | "VISITA_AGENDADA"
+  | "PROPOSTA"
+  | "GANHO"
+  | "PERDIDO";
 
 export interface Negociacao {
   id: number;
+  finalidade: Finalidade;
+  statusNegocio: StatusNegocio;
+  dataInicio: string; // YYYY-MM-DD
+  dataFim: string | null;
+  valor: number;
+  motivoPerda: string | null;
+  dataUltimaInteracao: string | null;
   imovelId: number;
   clienteId: number;
   corretorId: number;
-  status: string;
-  valorProposta: number;
 }
+
+/** Corpo de POST /negociacoes (corretor vem do token). */
+export interface NegociacaoInput {
+  finalidade: Finalidade;
+  statusNegocio: StatusNegocio;
+  dataInicio: string; // YYYY-MM-DD
+  dataFim: string | null;
+  valor: number;
+  imovelId: number;
+  clienteId: number;
+}
+
+/* ============================ Metadados de enums ============================ *
+ * Centralizados para reuso em selects (OPTIONS) e exibição (LABELS).
+ * ------------------------------------------------------------------------- */
+
+export const FINALIDADE_OPTIONS: Finalidade[] = ["ALUGUEL", "VENDA"];
+export const FINALIDADE_LABELS: Record<Finalidade, string> = {
+  ALUGUEL: "Aluguel",
+  VENDA: "Venda",
+};
+
+export const STATUS_IMOVEL_OPTIONS: StatusImovel[] = [
+  "DISPONIVEL",
+  "NEGOCIANDO",
+  "FECHADO",
+];
+export const STATUS_IMOVEL_LABELS: Record<StatusImovel, string> = {
+  DISPONIVEL: "Disponível",
+  NEGOCIANDO: "Negociando",
+  FECHADO: "Fechado",
+};
+
+export const TIPO_CLIENTE_OPTIONS: TipoCliente[] = [
+  "COMPRADOR",
+  "LOCATARIO",
+  "PROPRIETARIO",
+];
+export const TIPO_CLIENTE_LABELS: Record<TipoCliente, string> = {
+  COMPRADOR: "Comprador",
+  LOCATARIO: "Locatário",
+  PROPRIETARIO: "Proprietário",
+};
+
+export const PERFIL_OPTIONS: Perfil[] = ["ADMIN", "CORRETOR"];
+export const PERFIL_LABELS: Record<Perfil, string> = {
+  ADMIN: "Administrador",
+  CORRETOR: "Corretor",
+};
+
+/** Ordem das colunas do funil (kanban) de negociações. */
+export const STATUS_NEGOCIO_OPTIONS: StatusNegocio[] = [
+  "OPORTUNIDADE",
+  "EM_ATENDIMENTO",
+  "VISITA_AGENDADA",
+  "PROPOSTA",
+  "GANHO",
+  "PERDIDO",
+];
+export const STATUS_NEGOCIO_LABELS: Record<StatusNegocio, string> = {
+  OPORTUNIDADE: "Oportunidade",
+  EM_ATENDIMENTO: "Em atendimento",
+  VISITA_AGENDADA: "Visita agendada",
+  PROPOSTA: "Proposta",
+  GANHO: "Ganho",
+  PERDIDO: "Perdido",
+};

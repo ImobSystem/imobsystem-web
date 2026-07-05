@@ -11,6 +11,7 @@ import {
 } from "react";
 import { authService } from "@/services/auth";
 import { clearSession, tokenStorage, userStorage } from "@/services/storage";
+import { getImobiliariaIdFromToken } from "@/services/jwt";
 import type { Usuario } from "@/types";
 
 interface AuthContextValue {
@@ -42,8 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = tokenStorage.get();
     const storedUser = userStorage.get();
     if (storedToken && storedUser) {
+      // Backfill: sessões salvas antes de expormos o imobiliariaId reextraem do token.
+      const usuario: Usuario = {
+        ...storedUser,
+        imobiliariaId:
+          storedUser.imobiliariaId ?? getImobiliariaIdFromToken(storedToken),
+      };
       setToken(storedToken);
-      setUser(storedUser);
+      setUser(usuario);
     }
     setLoading(false);
   }, []);
@@ -51,7 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, senha: string) => {
     // Deixamos o erro do axios propagar; a tela de login o traduz para o usuário.
     const data = await authService.login({ email, senha });
-    const usuario: Usuario = { email: data.email, perfil: data.perfil };
+    // O imobiliariaId não vem no corpo da resposta — está codificado no JWT.
+    const usuario: Usuario = {
+      email: data.email,
+      perfil: data.perfil,
+      imobiliariaId: getImobiliariaIdFromToken(data.token),
+    };
 
     tokenStorage.set(data.token);
     userStorage.set(usuario);
