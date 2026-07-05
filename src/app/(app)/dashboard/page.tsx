@@ -22,91 +22,147 @@ import {
   type Negociacao,
 } from "@/types";
 
+/**
+ * Cada métrica é opcional (null = não carregou). Assim o dashboard tolera a
+ * falha de um endpoint isolado sem derrubar a tela inteira.
+ */
 interface DashboardData {
-  imoveis: Imovel[];
-  clientes: Cliente[];
-  negociacoes: Negociacao[];
-  corretoresTotal: number;
+  imoveis: Imovel[] | null;
+  clientes: Cliente[] | null;
+  negociacoes: Negociacao[] | null;
+  corretoresTotal: number | null;
 }
 
+const EMPTY: DashboardData = {
+  imoveis: null,
+  clientes: null,
+  negociacoes: null,
+  corretoresTotal: null,
+};
+
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState<DashboardData>(EMPTY);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Seções que falharam ao carregar (ex.: ["Corretores"]).
+  const [warnings, setWarnings] = useState<string[]>([]);
+  // Preenchido só quando TODOS os endpoints falham (erro de tela cheia).
+  const [fatalError, setFatalError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
-    try {
-      // Sem endpoints de contagem no backend: buscamos as listas e usamos .length.
-      // Promise.all pega tudo em paralelo (mais rápido que sequencial).
-      const [imoveis, corretores, clientes, negociacoes] = await Promise.all([
+    setWarnings([]);
+    setFatalError(null);
+
+    // allSettled (e não all): buscamos tudo em paralelo, mas o fracasso de um
+    // endpoint não cancela os outros — aproveitamos o que deu certo.
+    const [imoveisR, corretoresR, clientesR, negociacoesR] =
+      await Promise.allSettled([
         imovelService.list(),
         corretorService.list(),
         clienteService.list(),
         negociacaoService.list(),
       ]);
-      setData({
-        imoveis,
-        clientes,
-        negociacoes,
-        corretoresTotal: corretores.length,
-      });
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setLoading(false);
+
+    const falhas: string[] = [];
+    let ultimaMsg = "";
+    if (imoveisR.status === "rejected") {
+      falhas.push("Imóveis");
+      ultimaMsg = getErrorMessage(imoveisR.reason);
     }
+    if (corretoresR.status === "rejected") {
+      falhas.push("Corretores");
+      ultimaMsg = getErrorMessage(corretoresR.reason);
+    }
+    if (clientesR.status === "rejected") {
+      falhas.push("Clientes");
+      ultimaMsg = getErrorMessage(clientesR.reason);
+    }
+    if (negociacoesR.status === "rejected") {
+      falhas.push("Negociações");
+      ultimaMsg = getErrorMessage(negociacoesR.reason);
+    }
+
+    // Todos falharam → provavelmente rede/servidor fora: erro de tela cheia.
+    if (falhas.length === 4) {
+      setFatalError(ultimaMsg);
+      setLoading(false);
+      return;
+    }
+
+    setData({
+      imoveis: imoveisR.status === "fulfilled" ? imoveisR.value : null,
+      clientes: clientesR.status === "fulfilled" ? clientesR.value : null,
+      negociacoes:
+        negociacoesR.status === "fulfilled" ? negociacoesR.value : null,
+      corretoresTotal:
+        corretoresR.status === "fulfilled" ? corretoresR.value.length : null,
+    });
+    setWarnings(falhas);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  if (error) {
+  if (fatalError) {
     return (
       <>
         <PageHeader title="Dashboard" subtitle="Visão geral da imobiliária" />
         <Card>
-          <ErrorState message={error} onRetry={load} />
+          <ErrorState message={fatalError} onRetry={load} />
         </Card>
       </>
     );
   }
 
   // Mapas id->entidade para enriquecer os cards de negociação com endereço/nome.
-  const imovelById = new Map(data?.imoveis.map((i) => [i.id, i]));
-  const clienteById = new Map(data?.clientes.map((c) => [c.id, c]));
+  const imovelById = new Map((data.imoveis ?? []).map((i) => [i.id, i]));
+  const clienteById = new Map((data.clientes ?? []).map((c) => [c.id, c]));
 
   // Últimas 5 negociações (id desc como proxy de "mais recentes").
-  const recentes = [...(data?.negociacoes ?? [])]
+  const recentes = [...(data.negociacoes ?? [])]
     .sort((a, b) => b.id - a.id)
     .slice(0, 5);
+
+  // Valor exibido no card: número, "—" se falhou, "0" se ainda carregando trata via loading.
+  const cardValue = (v: number | null) => (v === null ? "—" : v);
 
   return (
     <>
       <PageHeader title="Dashboard" subtitle="Visão geral da imobiliária" />
 
+      {/* Aviso de falha parcial (algumas seções não carregaram) */}
+      {!loading && warnings.length > 0 && (
+        <div
+          role="alert"
+          className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+        >
+          Não foi possível carregar: <strong>{warnings.join(", ")}</strong>. Os
+          demais dados foram exibidos normalmente.
+        </div>
+      )}
+
       {/* Cards de totais */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Imóveis"
-          value={data?.imoveis.length ?? 0}
+          value={cardValue(data.imoveis?.length ?? null)}
           loading={loading}
         />
         <StatCard
           label="Corretores"
-          value={data?.corretoresTotal ?? 0}
+          value={cardValue(data.corretoresTotal)}
           loading={loading}
         />
         <StatCard
           label="Clientes"
-          value={data?.clientes.length ?? 0}
+          value={cardValue(data.clientes?.length ?? null)}
           loading={loading}
         />
         <StatCard
           label="Negociações"
-          value={data?.negociacoes.length ?? 0}
+          value={cardValue(data.negociacoes?.length ?? null)}
           loading={loading}
         />
       </div>
@@ -126,6 +182,10 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          ) : data.negociacoes === null ? (
+            <p className="px-5 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              Não foi possível carregar as negociações.
+            </p>
           ) : recentes.length === 0 ? (
             <p className="px-5 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
               Nenhuma negociação cadastrada ainda.
