@@ -24,6 +24,11 @@ interface AuthContextValue {
   /** Atalho derivado: existe uma sessão ativa? */
   isAuthenticated: boolean;
   login: (email: string, senha: string) => Promise<void>;
+  /**
+   * Estabelece a sessão a partir de um token já obtido (ex.: após o registro,
+   * que já devolve o token) — sem chamar /auth/login novamente.
+   */
+  loginComToken: (token: string, usuario: Usuario) => void;
   logout: () => void;
 }
 
@@ -55,21 +60,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = useCallback(async (email: string, senha: string) => {
-    // Deixamos o erro do axios propagar; a tela de login o traduz para o usuário.
-    const data = await authService.login({ email, senha });
-    // O imobiliariaId não vem no corpo da resposta — está codificado no JWT.
-    const usuario: Usuario = {
-      email: data.email,
-      perfil: data.perfil,
-      imobiliariaId: getImobiliariaIdFromToken(data.token),
-    };
-
-    tokenStorage.set(data.token);
+  /** Persiste token + usuário (localStorage) e atualiza o estado em memória. */
+  const persistSession = useCallback((novoToken: string, usuario: Usuario) => {
+    tokenStorage.set(novoToken);
     userStorage.set(usuario);
-    setToken(data.token);
+    setToken(novoToken);
     setUser(usuario);
   }, []);
+
+  const login = useCallback(
+    async (email: string, senha: string) => {
+      // Deixamos o erro do axios propagar; a tela de login o traduz para o usuário.
+      const data = await authService.login({ email, senha });
+      // O imobiliariaId não vem no corpo da resposta — está codificado no JWT.
+      const usuario: Usuario = {
+        email: data.email,
+        perfil: data.perfil,
+        imobiliariaId: getImobiliariaIdFromToken(data.token),
+      };
+      persistSession(data.token, usuario);
+    },
+    [persistSession],
+  );
+
+  const loginComToken = useCallback(
+    (novoToken: string, usuario: Usuario) => {
+      persistSession(novoToken, usuario);
+    },
+    [persistSession],
+  );
 
   const logout = useCallback(() => {
     clearSession();
@@ -84,9 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isAuthenticated: Boolean(token),
       login,
+      loginComToken,
       logout,
     }),
-    [user, token, loading, login, logout],
+    [user, token, loading, login, loginComToken, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

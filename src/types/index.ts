@@ -37,6 +37,29 @@ export interface LoginResponse {
   perfil: Perfil;
 }
 
+/** Corpo enviado no POST /auth/registro (cria imobiliária + usuário ADMIN). */
+export interface RegistroRequest {
+  nomeImobiliaria: string;
+  cnpj: string;
+  emailImobiliaria: string;
+  telefone: string;
+  nomeAdmin: string;
+  emailAdmin: string;
+  senha: string;
+  creci: string;
+}
+
+/**
+ * Resposta do POST /auth/registro. Diferente do login, já traz o
+ * `imobiliariaId` explicitamente (não precisamos extrair do token).
+ */
+export interface RegistroResponse {
+  token: string;
+  email: string;
+  perfil: Perfil;
+  imobiliariaId: number;
+}
+
 /* ============================ Imóveis ============================ */
 
 export type Finalidade = "ALUGUEL" | "VENDA";

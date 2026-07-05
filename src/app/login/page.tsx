@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getErrorMessage } from "@/services/errors";
@@ -101,6 +102,17 @@ export default function LoginPage() {
               {submitting ? "Entrando..." : "Entrar"}
             </Button>
           </form>
+
+          {/* Link para o cadastro de nova imobiliária */}
+          <p className="mt-6 text-center text-sm text-slate-500">
+            Não tem conta?{" "}
+            <Link
+              href="/registro"
+              className="font-medium text-emerald-600 transition hover:text-emerald-700"
+            >
+              Cadastre sua imobiliária
+            </Link>
+          </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-400">
