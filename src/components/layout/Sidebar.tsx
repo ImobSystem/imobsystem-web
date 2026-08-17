@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Brand } from "@/components/layout/Brand";
 
 interface NavItem {
   href: string;
@@ -84,24 +86,38 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+/** Itens restritos ao ADMIN (não aparecem para o CORRETOR). */
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  {
+    href: "/configuracoes",
+    label: "Configurações",
+    icon: icon(
+      <>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </>,
+    ),
+  },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  // Configurações é exclusiva do ADMIN — o CORRETOR nem vê o item no menu.
+  const navItems =
+    user?.perfil === "ADMIN" ? [...NAV_ITEMS, ...ADMIN_NAV_ITEMS] : NAV_ITEMS;
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-surface transition-colors md:flex dark:border-slate-800">
-      {/* Marca */}
-      <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
-          I
-        </div>
-        <span className="font-semibold text-slate-900 dark:text-white">
-          ImobSystem
-        </span>
+      {/* Marca (logo da imobiliária, com fallback para o "I" roxo) */}
+      <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+        <Brand />
       </div>
 
       {/* Navegação */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           // Ativo quando a rota atual é o item ou uma subrota dele.
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);

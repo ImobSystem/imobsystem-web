@@ -60,6 +60,33 @@ export interface RegistroResponse {
   imobiliariaId: number;
 }
 
+/* ============================ Imobiliária ============================ */
+
+/**
+ * Dados da imobiliária do usuário logado (GET /imobiliarias/minha).
+ *
+ * `logoBase64` é a logo personalizada já no formato de data URL
+ * (`data:image/png;base64,...`), pronta para ir direto no `src` de um <img>.
+ * Vem `null` enquanto a imobiliária não subiu nenhuma logo.
+ */
+export interface Imobiliaria {
+  id: number;
+  nome: string;
+  cnpj: string;
+  email: string;
+  telefone: string;
+  /** Enums de billing do backend; ainda não exibidos na UI, por isso `string`. */
+  statusPlano: string;
+  plano: string;
+  dataVencimento: string | null; // YYYY-MM-DD
+  logoBase64: string | null;
+}
+
+/** Corpo do PUT /imobiliarias/logo (somente ADMIN). */
+export interface AtualizarLogoRequest {
+  logoBase64: string;
+}
+
 /* ============================ Imóveis ============================ */
 
 export type Finalidade = "ALUGUEL" | "VENDA";

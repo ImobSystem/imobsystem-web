@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { Brand } from "@/components/layout/Brand";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { PERFIL_LABELS } from "@/types";
 
@@ -24,13 +25,8 @@ export function Header() {
   return (
     <header className="flex items-center justify-between border-b border-slate-200 bg-surface px-6 py-3 transition-colors dark:border-slate-800">
       {/* Marca compacta (aparece no mobile, onde a sidebar some). */}
-      <div className="flex items-center gap-2 md:hidden">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
-          I
-        </div>
-        <span className="font-semibold text-slate-900 dark:text-white">
-          ImobSystem
-        </span>
+      <div className="min-w-0 md:hidden">
+        <Brand />
       </div>
 
       <div className="ml-auto flex items-center gap-4">

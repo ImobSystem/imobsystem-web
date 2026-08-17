@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ImobiliariaProvider } from "@/contexts/ImobiliariaContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 
@@ -9,19 +10,25 @@ import { Header } from "@/components/layout/Header";
  * `(app)` é um route group: não aparece na URL, mas permite que todas as
  * telas internas (/dashboard, /imoveis, ...) herdem sidebar + header e a
  * proteção de autenticação de uma só vez.
+ *
+ * O <ImobiliariaProvider> fica dentro do <ProtectedRoute> para que a busca dos
+ * dados da imobiliária (logo, nome) aconteça uma única vez por sessão e só
+ * depois de a sessão estar confirmada.
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen bg-background transition-colors">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Header />
-          <main className="flex-1 overflow-x-hidden px-6 py-8">
-            <div className="mx-auto max-w-6xl">{children}</div>
-          </main>
+      <ImobiliariaProvider>
+        <div className="flex min-h-screen bg-background transition-colors">
+          <Sidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Header />
+            <main className="flex-1 overflow-x-hidden px-6 py-8">
+              <div className="mx-auto max-w-6xl">{children}</div>
+            </main>
+          </div>
         </div>
-      </div>
+      </ImobiliariaProvider>
     </ProtectedRoute>
   );
 }
