@@ -183,10 +183,10 @@ export function FotoUpload({ imovelId }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+        <h3 className="text-sm font-semibold text-foreground">
           Fotos do imóvel
         </h3>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <span className="text-[13px] text-faint">
           {totalFotos}/{FOTO_MAX_QUANTIDADE}
         </span>
       </div>
@@ -194,13 +194,13 @@ export function FotoUpload({ imovelId }: Props) {
       {loading ? (
         <LoadingState label="Carregando fotos..." />
       ) : loadError ? (
-        <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-3 text-sm text-danger">
           {loadError}
         </p>
       ) : (
         <>
           {totalFotos === 0 ? (
-            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-3 text-sm text-muted-foreground">
               Nenhuma foto cadastrada ainda.
             </p>
           ) : (
@@ -208,7 +208,7 @@ export function FotoUpload({ imovelId }: Props) {
               {fotos.map((foto) => (
                 <div
                   key={foto.id}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+                  className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border"
                 >
                   <button
                     type="button"
@@ -229,7 +229,7 @@ export function FotoUpload({ imovelId }: Props) {
                       setParaRemover(foto);
                     }}
                     aria-label="Remover foto"
-                    className="absolute right-1 top-1 rounded-full bg-slate-900/70 p-1.5 text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-600"
+                    className="absolute right-1 top-1 rounded-full bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100 hover:bg-danger"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 6h18" />
@@ -242,7 +242,7 @@ export function FotoUpload({ imovelId }: Props) {
               {pendentes.map((p) => (
                 <div
                   key={p.clientId}
-                  className="relative aspect-[4/3] overflow-hidden rounded-lg border border-dashed border-slate-300 dark:border-slate-600"
+                  className="relative aspect-[4/3] overflow-hidden rounded-lg border border-dashed border-border"
                 >
                   <img
                     src={p.previewUrl}
@@ -255,7 +255,7 @@ export function FotoUpload({ imovelId }: Props) {
                     </div>
                   )}
                   {p.status === "erro" && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-red-900/70 p-1 text-center text-[10px] leading-tight text-white">
+                    <div className="absolute inset-0 flex items-center justify-center bg-danger/80 p-1 text-center text-[10px] leading-tight text-white">
                       {p.erro ?? "Falha no envio"}
                     </div>
                   )}
@@ -264,7 +264,7 @@ export function FotoUpload({ imovelId }: Props) {
                       type="button"
                       onClick={() => removerPendente(p.clientId)}
                       aria-label="Remover seleção"
-                      className="absolute right-1 top-1 rounded-full bg-slate-900/70 p-1.5 text-white hover:bg-red-600"
+                      className="absolute right-1 top-1 rounded-full bg-black/60 p-1.5 text-white hover:bg-danger"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <path d="M18 6 6 18M6 6l12 12" />
@@ -289,13 +289,11 @@ export function FotoUpload({ imovelId }: Props) {
             <label
               htmlFor={`foto-input-${imovelId}`}
               className={
-                "inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 " +
-                "bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 " +
-                "hover:-translate-y-0.5 hover:border-primary-400 hover:text-primary-700 hover:shadow-lg " +
-                "active:translate-y-0 active:scale-[0.98] " +
-                "peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500/50 " +
-                "dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200 " +
-                "dark:hover:border-primary-500 dark:hover:text-primary-300 " +
+                "inline-flex cursor-pointer items-center gap-2 rounded border border-border-strong " +
+                "bg-transparent px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 " +
+                "hover:bg-hover " +
+                "active:scale-[0.98] " +
+                "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40 " +
                 (enviando || limiteAtingido ? "pointer-events-none opacity-60" : "")
               }
             >
@@ -313,13 +311,13 @@ export function FotoUpload({ imovelId }: Props) {
               </Button>
             )}
 
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-[13px] text-faint">
               {FOTO_FORMATOS_LABEL} · até {FOTO_MAX_LABEL} cada · máx. {FOTO_MAX_QUANTIDADE} fotos
             </p>
           </div>
 
           {selecaoErro && (
-            <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+            <p role="alert" className="mt-3 text-sm text-danger">
               {selecaoErro}
             </p>
           )}
@@ -342,7 +340,7 @@ export function FotoUpload({ imovelId }: Props) {
       {/* Lightbox simples: clique fora ou no X pra fechar. */}
       {ampliada && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 p-6"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-6"
           onClick={() => setAmpliada(null)}
           role="dialog"
           aria-modal="true"

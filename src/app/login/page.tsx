@@ -41,32 +41,27 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-background px-4 py-12 transition-colors">
+    <main className="relative flex min-h-screen justify-center bg-base px-4 pt-[15vh] pb-12 transition-colors">
       {/* Alternador de tema no canto */}
-      <div className="absolute right-4 top-4">
+      <div className="absolute right-5 top-5">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-md">
-        {/* Marca */}
+      <div className="h-fit w-full max-w-[400px]">
+        {/* Marca — só texto, sem ícone/placeholder */}
         <div className="mb-8 text-center">
-          <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-xl font-bold text-white shadow-sm">
-            I
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-[28px] font-bold tracking-tight text-foreground">
             ImobSystem
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Gestão imobiliária inteligente
-          </p>
+          <p className="mt-1.5 text-sm text-faint">Gestão imobiliária</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-slate-200 bg-surface p-8 shadow-sm dark:border-slate-800">
-          <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">
+        <div className="rounded-2xl border border-border bg-surface p-8">
+          <h2 className="mb-1 text-lg font-semibold text-foreground">
             Entrar na sua conta
           </h2>
-          <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mb-6 text-sm text-faint">
             Informe suas credenciais para continuar.
           </p>
 
@@ -98,7 +93,7 @@ export default function LoginPage() {
             {error && (
               <div
                 role="alert"
-                className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+                className="rounded-lg bg-danger-bg px-3.5 py-2.5 text-sm text-danger"
               >
                 {error}
               </div>
@@ -110,18 +105,18 @@ export default function LoginPage() {
           </form>
 
           {/* Link para o cadastro de nova imobiliária */}
-          <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-6 text-center text-sm text-faint">
             Não tem conta?{" "}
             <Link
               href="/registro"
-              className="font-medium text-primary-600 transition hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+              className="font-medium text-accent transition-colors duration-200 hover:text-[var(--accent-hover)]"
             >
               Cadastre sua imobiliária
             </Link>
           </p>
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+        <p className="mt-6 text-center text-xs text-faint">
           © {new Date().getFullYear()} ImobSystem. Todos os direitos reservados.
         </p>
       </div>

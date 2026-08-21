@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { IconAction } from "@/components/ui/IconAction";
 import {
   EmptyState,
   ErrorState,
@@ -13,6 +14,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImovelFormModal } from "@/components/imoveis/ImovelFormModal";
 import { useAsyncList } from "@/hooks/useAsyncList";
+import { usePageAction } from "@/contexts/PageActionContext";
 import { imovelService } from "@/services/imovelService";
 import { getErrorMessage } from "@/services/errors";
 import { STATUS_IMOVEL_TONE } from "@/lib/format";
@@ -22,6 +24,41 @@ import {
   STATUS_IMOVEL_LABELS,
   type Imovel,
 } from "@/types";
+
+const EDIT_ICON = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </svg>
+);
+
+const DELETE_ICON = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 6h18" />
+    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+  </svg>
+);
+
+function FotoThumb({ imovel }: { imovel: Imovel }) {
+  if (imovel.fotos.length > 0) {
+    return (
+      <img
+        src={buildThumbUrl(imovel.fotos[0])}
+        alt={`Foto de ${imovel.endereco}`}
+        className="h-10 w-10 shrink-0 rounded-md object-cover"
+      />
+    );
+  }
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-elevated text-faint">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="9" cy="9" r="2" />
+        <path d="m21 15-5-5L5 21" />
+      </svg>
+    </div>
+  );
+}
 
 export default function ImoveisPage() {
   const { data: imoveis, loading, error, reload } = useAsyncList(
@@ -46,6 +83,8 @@ export default function ImoveisPage() {
     setFormOpen(true);
   }
 
+  usePageAction({ label: "Cadastrar imóvel", onClick: openCreate });
+
   async function confirmDelete() {
     if (!toDelete) return;
     setDeleting(true);
@@ -66,99 +105,140 @@ export default function ImoveisPage() {
       <PageHeader
         title="Imóveis"
         subtitle="Gerencie os imóveis da imobiliária"
-        action={<Button onClick={openCreate}>Cadastrar imóvel</Button>}
+        action={<Button size="sm" onClick={openCreate}>Cadastrar imóvel</Button>}
       />
 
-      <Card className="overflow-hidden">
-        {loading ? (
+      {loading ? (
+        <Card>
           <LoadingState label="Carregando imóveis..." />
-        ) : error ? (
+        </Card>
+      ) : error ? (
+        <Card>
           <ErrorState message={error} onRetry={reload} />
-        ) : imoveis.length === 0 ? (
+        </Card>
+      ) : imoveis.length === 0 ? (
+        <Card>
           <EmptyState
             title="Nenhum imóvel cadastrado"
             description="Comece cadastrando o primeiro imóvel da sua imobiliária."
-            action={<Button onClick={openCreate}>Cadastrar imóvel</Button>}
+            action={<Button size="sm" onClick={openCreate}>Cadastrar imóvel</Button>}
           />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Foto</th>
-                  <th className="px-5 py-3 font-medium">Endereço</th>
-                  <th className="px-5 py-3 font-medium">Área</th>
-                  <th className="px-5 py-3 font-medium">Finalidade</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 text-right font-medium">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {imoveis.map((imovel) => (
-                  <tr
-                    key={imovel.id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                  >
-                    <td className="px-5 py-3">
-                      {imovel.fotos.length > 0 ? (
-                        <img
-                          src={buildThumbUrl(imovel.fotos[0])}
-                          alt={`Foto de ${imovel.endereco}`}
-                          className="h-12 w-16 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="9" cy="9" r="2" />
-                            <path d="m21 15-5-5L5 21" />
-                          </svg>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 font-medium text-slate-900 dark:text-slate-100">
-                      {imovel.endereco}
-                      <span className="block text-xs font-normal text-slate-400 dark:text-slate-500">
-                        {imovel.CEP}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
-                      {imovel.area_m2} m²
-                    </td>
-                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
-                      {FINALIDADE_LABELS[imovel.finalidade]}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge tone={STATUS_IMOVEL_TONE[imovel.statusImovel]}>
-                        {STATUS_IMOVEL_LABELS[imovel.statusImovel]}
-                      </Badge>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => openEdit(imovel)}
-                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDeleteError(null);
-                            setToDelete(imovel);
-                          }}
-                          className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
+        </Card>
+      ) : (
+        <>
+          {/* Desktop: tabela */}
+          <Card className="hidden overflow-hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="border-b border-border bg-elevated text-[11px] font-semibold uppercase tracking-wider text-faint">
+                  <tr>
+                    <th className="px-4 py-3">Foto</th>
+                    <th className="px-4 py-3">Endereço</th>
+                    <th className="px-4 py-3">Área</th>
+                    <th className="px-4 py-3">Finalidade</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {imoveis.map((imovel) => (
+                    <tr
+                      key={imovel.id}
+                      className="transition-colors duration-150 hover:bg-hover"
+                    >
+                      <td className="px-4 py-3.5">
+                        <FotoThumb imovel={imovel} />
+                      </td>
+                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                        {imovel.endereco}
+                        <span className="block text-[13px] text-faint">
+                          {imovel.CEP}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                        {imovel.area_m2} m²
+                      </td>
+                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                        {FINALIDADE_LABELS[imovel.finalidade]}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <Badge tone={STATUS_IMOVEL_TONE[imovel.statusImovel]}>
+                          {STATUS_IMOVEL_LABELS[imovel.statusImovel]}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center justify-end gap-1">
+                          <IconAction
+                            label="Editar"
+                            onClick={() => openEdit(imovel)}
+                            icon={EDIT_ICON}
+                          />
+                          <IconAction
+                            label="Excluir"
+                            variant="danger"
+                            onClick={() => {
+                              setDeleteError(null);
+                              setToDelete(imovel);
+                            }}
+                            icon={DELETE_ICON}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Mobile: cards empilhados */}
+          <div className="flex flex-col gap-2 md:hidden">
+            {imoveis.map((imovel) => (
+              <div
+                key={imovel.id}
+                className="rounded-xl border border-border bg-surface p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <FotoThumb imovel={imovel} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {imovel.endereco}
+                    </p>
+                    <p className="truncate text-[13px] text-faint">
+                      {imovel.CEP}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                  <p>{imovel.area_m2} m²</p>
+                  <p>{FINALIDADE_LABELS[imovel.finalidade]}</p>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <Badge tone={STATUS_IMOVEL_TONE[imovel.statusImovel]}>
+                    {STATUS_IMOVEL_LABELS[imovel.statusImovel]}
+                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <IconAction
+                      label="Editar"
+                      onClick={() => openEdit(imovel)}
+                      icon={EDIT_ICON}
+                    />
+                    <IconAction
+                      label="Excluir"
+                      variant="danger"
+                      onClick={() => {
+                        setDeleteError(null);
+                        setToDelete(imovel);
+                      }}
+                      icon={DELETE_ICON}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </Card>
+        </>
+      )}
 
       {/* Cadastro / edição */}
       <ImovelFormModal

@@ -1,43 +1,50 @@
 import type { ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "danger" | "neutral";
+type Size = "sm" | "md";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Exibe spinner e desabilita o botão enquanto true. */
   loading?: boolean;
-  /** Estilo do botão. `primary` (verde) é o padrão. */
+  /** Estilo do botão. `primary` (ember) é o padrão. */
   variant?: Variant;
+  /**
+   * `sm` é o CTA compacto de cabeçalho de página (8px/16px, 13px) — `md`
+   * (default) é o tamanho usado em modais/formulários (10px/20px, 14px).
+   */
+  size?: Size;
 }
 
 /*
- * Estilos por variante. Todas compartilham o mesmo "movimento" (elevação no
- * hover + afundar no clique) — muda só a cor/sombra. Usar gradiente + sombra
- * colorida dá o toque "vivo".
+ * Estilos por variante. O primário é o ÚNICO elemento com fundo laranja
+ * sólido do sistema inteiro — e "brilha" no hover com um glow (box-shadow
+ * em duas camadas), a assinatura visual do Cron.
  */
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-gradient-to-b from-primary-500 to-primary-600 text-white shadow-primary-600/20 " +
-    "hover:from-primary-500 hover:to-primary-700 hover:shadow-primary-600/30 focus:ring-primary-500/50",
+    "bg-accent text-white hover:bg-[var(--accent-hover)] " +
+    "hover:shadow-[0_0_0_1px_var(--accent-glow-inner),0_0_20px_4px_var(--accent-glow-outer)] " +
+    "focus:ring-accent/40",
   danger:
-    "bg-gradient-to-b from-red-500 to-red-600 text-white shadow-red-600/20 " +
-    "hover:from-red-500 hover:to-red-700 hover:shadow-red-600/30 focus:ring-red-500/50",
+    "bg-transparent text-danger border border-danger-bg hover:bg-danger-bg focus:ring-danger/30",
   neutral:
-    "bg-gradient-to-b from-slate-700 to-slate-800 text-white shadow-slate-800/20 " +
-    "hover:from-slate-700 hover:to-slate-900 hover:shadow-slate-800/30 focus:ring-slate-500/50 " +
-    "dark:from-slate-600 dark:to-slate-700 dark:hover:to-slate-800",
+    "bg-transparent text-muted-foreground border border-border-strong hover:bg-hover focus:ring-accent/20",
+};
+
+const SIZES: Record<Size, string> = {
+  sm: "px-4 py-2 text-[13px]",
+  md: "px-5 py-2.5 text-sm",
 };
 
 /**
  * Botão da aplicação.
  *
- * Detalhes de "vida": gradiente sutil, sombra colorida que cresce no hover,
- * leve elevação (-translate-y) ao passar o mouse e um "afundar" (scale) no
- * clique — tudo com `transition`. Quando `loading`, mostra spinner e bloqueia
- * cliques (evita submissões duplicadas).
+ * `loading` mostra spinner e bloqueia cliques (evita duplo submit).
  */
 export function Button({
   loading = false,
   variant = "primary",
+  size = "md",
   disabled,
   children,
   className = "",
@@ -47,12 +54,13 @@ export function Button({
     <button
       disabled={disabled || loading}
       className={
-        "group inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium " +
-        "shadow-sm transition-all duration-200 " +
-        "hover:-translate-y-0.5 hover:shadow-lg " +
-        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 " +
-        "active:translate-y-0 active:scale-[0.98] " +
-        "disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:hover:translate-y-0 " +
+        "inline-flex items-center justify-center gap-2 rounded font-medium " +
+        "transition-all duration-200 " +
+        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base " +
+        "active:scale-[0.98] " +
+        "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-none " +
+        SIZES[size] +
+        " " +
         VARIANTS[variant] +
         " " +
         className
@@ -61,7 +69,7 @@ export function Button({
     >
       {loading && (
         <span
-          className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+          className="h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current"
           aria-hidden
         />
       )}

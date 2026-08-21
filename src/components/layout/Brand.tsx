@@ -6,28 +6,24 @@ import { useImobiliaria } from "@/contexts/ImobiliariaContext";
 const NOME_PADRAO = "ImobSystem";
 
 /**
- * Marca da área logada: logo da imobiliária + nome.
+ * Marca no topo da sidebar: avatar (logo ou iniciais) + nome.
  *
- * Usada na sidebar (desktop) e no header (mobile) para as duas nunca saírem
- * de sincronia. Sem logo cadastrada, cai no quadrado roxo com "I".
+ * Vive dentro do `group/sidebar` do <Sidebar>: o nome fica com opacidade 0
+ * (e a coluna pai com `overflow-hidden`) até a sidebar expandir — no hover
+ * (desktop) ou quando `mobileOpen` força o estado expandido (drawer).
  */
-export function Brand() {
+export function Brand({ mobileOpen = false }: { mobileOpen?: boolean }) {
   const { imobiliaria } = useImobiliaria();
 
   const logo = imobiliaria?.logoBase64 ?? null;
-  // Enquanto carrega (ou se a busca falhar), o nome do produto segura o lugar.
   const nome = imobiliaria?.nome ?? NOME_PADRAO;
+  // Fallback sem logo: as 2 primeiras letras do nome — nunca um ícone genérico.
+  const iniciais = nome.slice(0, 2).toUpperCase();
 
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex w-full min-w-0 items-center gap-3">
       {logo ? (
-        /*
-         * Container de tamanho FIXO com a imagem em object-contain: a logo
-         * cabe inteira sem distorcer, seja ela quadrada, larga ou alta.
-         * O fundo claro é proposital — logos com fundo transparente e traço
-         * escuro sumiriam no tema escuro.
-         */
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-0.5 dark:border-slate-700">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-white p-1">
           <img
             src={logo}
             alt={`Logo de ${nome}`}
@@ -35,14 +31,16 @@ export function Brand() {
           />
         </div>
       ) : (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
-          I
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent-subtle text-sm font-bold text-accent">
+          {iniciais}
         </div>
       )}
 
-      {/* `truncate` + `min-w-0` no pai evitam que nomes longos estourem a sidebar. */}
       <span
-        className="truncate font-semibold text-slate-900 dark:text-white"
+        className={
+          "truncate whitespace-nowrap text-sm font-semibold text-foreground opacity-0 transition-opacity duration-150 md:group-hover/sidebar:opacity-100 " +
+          (mobileOpen ? "opacity-100" : "")
+        }
         title={nome}
       >
         {nome}

@@ -21,23 +21,43 @@ export function formatDate(iso: string | null | undefined): string {
 /* Mapas de cor (tom do Badge) por status. Mantidos aqui para reuso e
  * consistência visual entre listagens, dashboard e kanban. */
 
+/*
+ * Nota: o tom "violet" do Badge usa a cor accent (laranja ember) — reservada
+ * SÓ para o badge de perfil ADMIN (ver CorretorFormModal/página de
+ * corretores), em linha com a regra de "uma cor, um destaque" do design.
+ * Nenhum outro mapeamento abaixo usa "violet".
+ */
+
 export const STATUS_IMOVEL_TONE: Record<StatusImovel, BadgeTone> = {
   DISPONIVEL: "green",
   NEGOCIANDO: "amber",
-  FECHADO: "gray",
+  FECHADO: "blue",
 };
 
 export const TIPO_CLIENTE_TONE: Record<TipoCliente, BadgeTone> = {
   COMPRADOR: "blue",
-  LOCATARIO: "violet",
+  LOCATARIO: "gray",
   PROPRIETARIO: "green",
 };
 
 export const STATUS_NEGOCIO_TONE: Record<StatusNegocio, BadgeTone> = {
   OPORTUNIDADE: "gray",
   EM_ATENDIMENTO: "blue",
-  VISITA_AGENDADA: "violet",
+  VISITA_AGENDADA: "blue",
   PROPOSTA: "amber",
   GANHO: "green",
   PERDIDO: "red",
+};
+
+/**
+ * Cor da bolinha indicadora por status (kanban de negociações + lista de
+ * atividade do dashboard) — espelha `STATUS_NEGOCIO_TONE`, nunca usa o accent.
+ */
+export const STATUS_NEGOCIO_DOT: Record<StatusNegocio, string> = {
+  OPORTUNIDADE: "bg-faint",
+  EM_ATENDIMENTO: "bg-info",
+  VISITA_AGENDADA: "bg-info",
+  PROPOSTA: "bg-warning",
+  GANHO: "bg-success",
+  PERDIDO: "bg-danger",
 };

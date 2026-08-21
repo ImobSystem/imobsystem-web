@@ -75,8 +75,23 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
       open={open}
       title={isEdit ? "Editar cliente" : "Cadastrar cliente"}
       onClose={onClose}
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="neutral"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" form="cliente-form" loading={submitting}>
+            {isEdit ? "Salvar alterações" : "Cadastrar"}
+          </Button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form id="cliente-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           id="nome"
           label="Nome"
@@ -131,25 +146,11 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
         {error && (
           <div
             role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+            className="rounded-lg border border-danger-bg bg-danger-bg px-3.5 py-2.5 text-sm text-danger"
           >
             {error}
           </div>
         )}
-
-        <div className="mt-2 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="rounded-lg px-4 py-2.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-60 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            Cancelar
-          </button>
-          <Button type="submit" loading={submitting}>
-            {isEdit ? "Salvar alterações" : "Cadastrar"}
-          </Button>
-        </div>
       </form>
     </Modal>
   );

@@ -5,24 +5,32 @@ import { useEffect, type ReactNode } from "react";
 interface ModalProps {
   open: boolean;
   title: string;
+  subtitle?: string;
   onClose: () => void;
+  /** Conteúdo do corpo (rola independente se passar de `max-h`). */
   children: ReactNode;
-  /** Largura máxima do card (default: max-w-lg). */
+  /** Ações do rodapé (Cancelar/Salvar). Sem isso, o modal não tem rodapé. */
+  footer?: ReactNode;
+  /** Largura máxima do card (default: 520px, conforme o redesign). */
   maxWidthClass?: string;
 }
 
 /**
- * Modal genérico centralizado.
+ * Modal genérico: header (título + subtítulo + fechar), body rolável,
+ * footer opcional com borda separando as ações.
  * - Fecha no ESC e no clique do backdrop.
  * - Trava o scroll do body enquanto aberto.
+ * - Backdrop com blur forte (8px) — o card "flutua" de verdade.
  * - Não renderiza nada quando fechado (evita nós ocultos no DOM).
  */
 export function Modal({
   open,
   title,
+  subtitle,
   onClose,
   children,
-  maxWidthClass = "max-w-lg",
+  footer,
+  maxWidthClass = "max-w-[520px]",
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -43,7 +51,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-[8px]"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -52,20 +60,23 @@ export function Modal({
       <div
         // Impede que cliques dentro do card fechem o modal.
         onClick={(e) => e.stopPropagation()}
-        className={`w-full ${maxWidthClass} rounded-2xl bg-surface shadow-xl dark:ring-1 dark:ring-slate-800`}
+        className={`animate-scale-in w-full ${maxWidthClass} rounded-2xl border border-border bg-surface`}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            {title}
-          </h2>
+        <div className="flex items-start justify-between gap-4 px-6 pt-6">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+            {subtitle && (
+              <p className="mt-0.5 text-[13px] text-faint">{subtitle}</p>
+            )}
+          </div>
           <button
             onClick={onClose}
             aria-label="Fechar"
-            className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="shrink-0 rounded p-1.5 text-faint transition-colors duration-150 hover:text-muted-foreground"
           >
             <svg
-              width="20"
-              height="20"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -76,7 +87,16 @@ export function Modal({
             </svg>
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto px-6 py-5">{children}</div>
+
+        <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
+          {children}
+        </div>
+
+        {footer && (
+          <div className="flex justify-end gap-2.5 border-t border-border px-6 py-4">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -86,6 +86,7 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
   // Em edição, o id sempre existe; em criação, só depois do POST bem-sucedido.
   const idParaFotos = imovel?.id ?? createdId;
   const mostrarFotos = isEdit || createdId !== null;
+  const mostrarForm = isEdit || createdId === null;
 
   return (
     <Modal
@@ -93,10 +94,33 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
       title={isEdit ? "Editar imóvel" : "Cadastrar imóvel"}
       onClose={onClose}
       maxWidthClass={mostrarFotos ? "max-w-2xl" : "max-w-lg"}
+      footer={
+        mostrarForm ? (
+          <>
+            <Button
+              type="button"
+              variant="neutral"
+              onClick={onClose}
+              disabled={submitting}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" form="imovel-form" loading={submitting}>
+              {isEdit ? "Salvar alterações" : "Cadastrar"}
+            </Button>
+          </>
+        ) : (
+          <Button onClick={onSaved}>Concluir</Button>
+        )
+      }
     >
       {/* Etapa "dados": sempre visível em edição; em criação, só até o POST. */}
-      {(isEdit || createdId === null) && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {mostrarForm && (
+        <form
+          id="imovel-form"
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
+        >
           <Input
             id="endereco"
             label="Endereço"
@@ -164,38 +188,19 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
           {error && (
             <div
               role="alert"
-              className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+              className="rounded-lg border border-danger-bg bg-danger-bg px-3.5 py-2.5 text-sm text-danger"
             >
               {error}
             </div>
           )}
-
-          <div className="mt-2 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="rounded-lg px-4 py-2.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-60 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              Cancelar
-            </button>
-            <Button type="submit" loading={submitting}>
-              {isEdit ? "Salvar alterações" : "Cadastrar"}
-            </Button>
-          </div>
         </form>
       )}
 
       {/* Etapa "fotos": em edição some junto do form; em criação, aparece
           sozinha depois que o imóvel é criado. */}
       {mostrarFotos && idParaFotos && (
-        <div className={isEdit ? "mt-6 border-t border-slate-200 pt-6 dark:border-slate-800" : ""}>
+        <div className={isEdit ? "mt-6 border-t border-border pt-6" : ""}>
           <FotoUpload imovelId={idParaFotos} />
-          {!isEdit && (
-            <div className="mt-6 flex justify-end">
-              <Button onClick={onSaved}>Concluir</Button>
-            </div>
-          )}
         </div>
       )}
     </Modal>

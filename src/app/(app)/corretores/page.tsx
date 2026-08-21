@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/States";
 import { CorretorFormModal } from "@/components/corretores/CorretorFormModal";
 import { useAsyncList } from "@/hooks/useAsyncList";
+import { usePageAction } from "@/contexts/PageActionContext";
 import { corretorService } from "@/services/corretorService";
 import { PERFIL_LABELS } from "@/types";
 
@@ -21,69 +22,108 @@ export default function CorretoresPage() {
   );
   const [formOpen, setFormOpen] = useState(false);
 
+  usePageAction({
+    label: "Cadastrar corretor",
+    onClick: () => setFormOpen(true),
+  });
+
   return (
     <>
       <PageHeader
         title="Corretores"
         subtitle="Equipe da imobiliária"
         action={
-          <Button onClick={() => setFormOpen(true)}>Cadastrar corretor</Button>
+          <Button size="sm" onClick={() => setFormOpen(true)}>Cadastrar corretor</Button>
         }
       />
 
-      <Card className="overflow-hidden">
-        {loading ? (
+      {loading ? (
+        <Card>
           <LoadingState label="Carregando corretores..." />
-        ) : error ? (
+        </Card>
+      ) : error ? (
+        <Card>
           <ErrorState message={error} onRetry={reload} />
-        ) : corretores.length === 0 ? (
+        </Card>
+      ) : corretores.length === 0 ? (
+        <Card>
           <EmptyState
             title="Nenhum corretor cadastrado"
             description="Cadastre corretores para dar acesso à sua equipe."
             action={
-              <Button onClick={() => setFormOpen(true)}>
+              <Button size="sm" onClick={() => setFormOpen(true)}>
                 Cadastrar corretor
               </Button>
             }
           />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Nome</th>
-                  <th className="px-5 py-3 font-medium">E-mail</th>
-                  <th className="px-5 py-3 font-medium">CRECI</th>
-                  <th className="px-5 py-3 font-medium">Perfil</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {corretores.map((c) => (
-                  <tr
-                    key={c.id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                  >
-                    <td className="px-5 py-3 font-medium text-slate-900 dark:text-slate-100">
-                      {c.nome}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
-                      {c.email}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
-                      {c.creci}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge tone={c.perfil === "ADMIN" ? "violet" : "blue"}>
-                        {PERFIL_LABELS[c.perfil]}
-                      </Badge>
-                    </td>
+        </Card>
+      ) : (
+        <>
+          {/* Desktop: tabela */}
+          <Card className="hidden overflow-hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="border-b border-border bg-elevated text-[11px] font-semibold uppercase tracking-wider text-faint">
+                  <tr>
+                    <th className="px-4 py-3">Nome</th>
+                    <th className="px-4 py-3">E-mail</th>
+                    <th className="px-4 py-3">CRECI</th>
+                    <th className="px-4 py-3">Perfil</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {corretores.map((c) => (
+                    <tr
+                      key={c.id}
+                      className="transition-colors duration-150 hover:bg-hover"
+                    >
+                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                        {c.nome}
+                      </td>
+                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                        {c.email}
+                      </td>
+                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                        {c.creci}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <Badge tone={c.perfil === "ADMIN" ? "violet" : "blue"}>
+                          {PERFIL_LABELS[c.perfil]}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Mobile: cards empilhados */}
+          <div className="flex flex-col gap-2 md:hidden">
+            {corretores.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-xl border border-border bg-surface p-4"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {c.nome}
+                  </p>
+                  <Badge tone={c.perfil === "ADMIN" ? "violet" : "blue"}>
+                    {PERFIL_LABELS[c.perfil]}
+                  </Badge>
+                </div>
+                <p className="mt-1 truncate text-[13px] text-faint">
+                  {c.email}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  CRECI {c.creci}
+                </p>
+              </div>
+            ))}
           </div>
-        )}
-      </Card>
+        </>
+      )}
 
       <CorretorFormModal
         open={formOpen}

@@ -19,19 +19,24 @@ import {
  * Quadro de preview de tamanho fixo.
  *
  * O tamanho fixo + `object-contain` garantem que qualquer proporção de imagem
- * caiba inteira, sem esticar nem cortar. Sem imagem, mostra o "I" roxo padrão.
+ * caiba inteira, sem esticar nem cortar. Sem imagem, um ícone neutro — nunca
+ * um placeholder colorido genérico.
  */
 function LogoPreview({ src, alt }: { src: string | null; alt: string }) {
   if (!src) {
     return (
-      <div className="flex h-24 w-24 items-center justify-center rounded-xl bg-primary-600 text-3xl font-bold text-white">
-        I
+      <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-border bg-elevated text-faint">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="9" cy="9" r="2" />
+          <path d="m21 15-5-5L5 21" />
+        </svg>
       </div>
     );
   }
 
   return (
-    <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-700">
+    <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
       <img src={src} alt={alt} className="h-full w-full object-contain" />
     </div>
   );
@@ -40,7 +45,7 @@ function LogoPreview({ src, alt }: { src: string | null; alt: string }) {
 /** Rótulo pequeno acima de cada preview. */
 function PreviewLabel({ children }: { children: string }) {
   return (
-    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-faint">
       {children}
     </p>
   );
@@ -131,10 +136,10 @@ export function LogoSection() {
 
   return (
     <Card className="p-6">
-      <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+      <h2 className="text-base font-semibold text-foreground">
         Logo da imobiliária
       </h2>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      <p className="mt-1 text-sm text-faint">
         A logo aparece no topo do menu lateral para todos os usuários da
         imobiliária.
       </p>
@@ -154,7 +159,7 @@ export function LogoSection() {
                 alt={`Logo atual de ${nomeImobiliaria}`}
               />
               {!logoAtual && (
-                <p className="mt-2 max-w-[10rem] text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-2 max-w-[10rem] text-[13px] text-faint">
                   Nenhuma logo enviada — usando o padrão.
                 </p>
               )}
@@ -162,10 +167,7 @@ export function LogoSection() {
 
             {novaLogo && (
               <>
-                <div
-                  className="pb-8 text-slate-400 dark:text-slate-600"
-                  aria-hidden
-                >
+                <div className="pb-8 text-faint" aria-hidden>
                   <svg
                     width="24"
                     height="24"
@@ -184,7 +186,7 @@ export function LogoSection() {
                 <div>
                   <PreviewLabel>Nova logo</PreviewLabel>
                   <LogoPreview src={novaLogo} alt="Pré-visualização da nova logo" />
-                  <p className="mt-2 max-w-[10rem] truncate text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-2 max-w-[10rem] truncate text-[13px] text-faint">
                     {nomeArquivo}
                   </p>
                 </div>
@@ -205,14 +207,12 @@ export function LogoSection() {
             <label
               htmlFor="logo-input"
               className={
-                "inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 " +
-                "bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 " +
-                "hover:-translate-y-0.5 hover:border-primary-400 hover:text-primary-700 hover:shadow-lg " +
-                "active:translate-y-0 active:scale-[0.98] " +
+                "inline-flex cursor-pointer items-center gap-2 rounded border border-border-strong " +
+                "bg-transparent px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 " +
+                "hover:bg-hover " +
+                "active:scale-[0.98] " +
                 // O input é sr-only, então o anel de foco é espelhado no label.
-                "peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500/50 " +
-                "dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200 " +
-                "dark:hover:border-primary-500 dark:hover:text-primary-300 " +
+                "peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40 " +
                 (salvando ? "pointer-events-none opacity-60" : "")
               }
             >
@@ -239,31 +239,25 @@ export function LogoSection() {
                 type="button"
                 onClick={limparSelecao}
                 disabled={salvando}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                className="rounded px-3 py-2 text-sm font-medium text-faint transition-colors duration-150 hover:bg-hover hover:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Descartar seleção
               </button>
             )}
 
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-[13px] text-faint">
               {LOGO_FORMATOS_LABEL} · até {LOGO_MAX_LABEL}
             </p>
           </div>
 
           {/* Feedback anunciado por leitores de tela (alert = erro, status = ok). */}
           {mensagemErro && (
-            <p
-              role="alert"
-              className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400"
-            >
+            <p role="alert" className="rounded-lg bg-danger-bg px-4 py-3 text-sm text-danger">
               {mensagemErro}
             </p>
           )}
           {sucesso && (
-            <p
-              role="status"
-              className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-            >
+            <p role="status" className="rounded-lg bg-success-bg px-4 py-3 text-sm text-success">
               Logo atualizada!
             </p>
           )}

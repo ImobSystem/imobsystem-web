@@ -14,10 +14,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   function Input({ label, id, error, className = "", ...props }, ref) {
     return (
       <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor={id}
-          className="text-sm font-medium text-slate-700 dark:text-slate-300"
-        >
+        <label htmlFor={id} className="text-sm font-medium text-muted-foreground">
           {label}
         </label>
         <input
@@ -25,21 +22,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           id={id}
           aria-invalid={error ? true : undefined}
           className={
-            "rounded-lg border bg-white px-3.5 py-2.5 text-slate-900 " +
-            "placeholder:text-slate-400 outline-none transition " +
-            "focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50 " +
-            "dark:bg-slate-800/60 dark:text-slate-100 dark:placeholder:text-slate-500 dark:disabled:bg-slate-800/30 " +
-            "dark:[color-scheme:dark] " +
+            "rounded-lg border bg-elevated px-3.5 py-2.5 text-sm text-muted-foreground " +
+            "placeholder:text-faint outline-none transition-[border-color,box-shadow] duration-150 " +
+            "disabled:cursor-not-allowed disabled:opacity-60 " +
             (error
-              ? "border-red-400 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500/70 "
-              : "border-slate-300 focus:border-primary-500 focus:ring-primary-500/20 dark:border-slate-700 dark:focus:border-primary-500 ") +
+              ? "border-danger focus:border-danger focus:shadow-[0_0_0_3px_var(--status-danger-bg)] "
+              : "border-border focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-subtle)] ") +
             className
           }
           {...props}
         />
-        {error && (
-          <span className="text-xs text-red-600 dark:text-red-400">{error}</span>
-        )}
+        {error && <span className="text-xs text-danger">{error}</span>}
       </div>
     );
   },
