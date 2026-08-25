@@ -113,6 +113,13 @@ export interface ImovelInput {
   statusImovel: StatusImovel;
 }
 
+/** Filtros de GET /imoveis — todos opcionais; omitidos = sem filtro. */
+export interface ImovelFiltros {
+  endereco?: string;
+  status?: StatusImovel;
+  finalidade?: Finalidade;
+}
+
 /**
  * Foto de um imóvel. A URL já aponta pro Cloudinary — o backend só guarda
  * a referência (upload é feito direto do front pro Cloudinary).
@@ -167,6 +174,13 @@ export interface ClienteInput {
   tipoCliente: TipoCliente;
 }
 
+/** Filtros de GET /clientes — todos opcionais; omitidos = sem filtro. */
+export interface ClienteFiltros {
+  nome?: string;
+  email?: string;
+  tipo?: TipoCliente;
+}
+
 /* ============================ Negociações ============================ */
 
 export type StatusNegocio =
@@ -200,6 +214,12 @@ export interface NegociacaoInput {
   valor: number;
   imovelId: number;
   clienteId: number;
+}
+
+/** Filtros de GET /negociacoes — todos opcionais; omitidos = sem filtro. */
+export interface NegociacaoFiltros {
+  status?: StatusNegocio;
+  finalidade?: Finalidade;
 }
 
 /* ============================ Metadados de enums ============================ *

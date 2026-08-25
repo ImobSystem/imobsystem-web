@@ -1,10 +1,20 @@
 import api from "./api";
-import type { Negociacao, NegociacaoInput, StatusNegocio } from "@/types";
+import { buildQueryString } from "@/lib/queryParams";
+import type {
+  Negociacao,
+  NegociacaoFiltros,
+  NegociacaoInput,
+  StatusNegocio,
+} from "@/types";
 
 /** Chamadas à API de Negociações. */
 export const negociacaoService = {
-  list(): Promise<Negociacao[]> {
-    return api.get<Negociacao[]>("/negociacoes").then((r) => r.data);
+  list(filtros?: NegociacaoFiltros): Promise<Negociacao[]> {
+    const query = buildQueryString({
+      status: filtros?.status,
+      finalidade: filtros?.finalidade,
+    });
+    return api.get<Negociacao[]>(`/negociacoes${query}`).then((r) => r.data);
   },
   getById(id: number): Promise<Negociacao> {
     return api.get<Negociacao>(`/negociacoes/${id}`).then((r) => r.data);
