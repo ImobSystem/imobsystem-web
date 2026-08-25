@@ -8,6 +8,18 @@ import { getErrorMessage } from "@/services/errors";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { compose, email as emailRule, required } from "@/lib/validators";
+
+interface FormState {
+  email: string;
+  senha: string;
+}
+
+const rules = {
+  email: compose<string, FormState>(required("E-mail obrigatório."), emailRule()),
+  senha: required("Senha obrigatória."),
+};
 
 export default function LoginPage() {
   const { login, isAuthenticated, loading: authLoading } = useAuth();
@@ -17,6 +29,9 @@ export default function LoginPage() {
   const [senha, setSenha] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const { getError, handleBlur, handleChange, validateAll, isSubmitDisabled } =
+    useFormValidation<FormState>(rules);
 
   // Se o usuário já está logado (ex.: voltou para /login manualmente),
   // mandamos direto para o dashboard.
@@ -29,6 +44,10 @@ export default function LoginPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    const values: FormState = { email, senha };
+    if (!validateAll(values)) return;
+
     setSubmitting(true);
     try {
       await login(email, senha);
@@ -72,7 +91,12 @@ export default function LoginPage() {
               label="E-mail"
               placeholder="voce@imobiliaria.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                handleChange("email", e.target.value, { email: e.target.value, senha });
+              }}
+              onBlur={() => handleBlur("email", email, { email, senha })}
+              error={getError("email")}
               autoComplete="email"
               required
               disabled={submitting}
@@ -83,7 +107,12 @@ export default function LoginPage() {
               label="Senha"
               placeholder="••••••••"
               value={senha}
-              onChange={(e) => setSenha(e.target.value)}
+              onChange={(e) => {
+                setSenha(e.target.value);
+                handleChange("senha", e.target.value, { email, senha: e.target.value });
+              }}
+              onBlur={() => handleBlur("senha", senha, { email, senha })}
+              error={getError("senha")}
               autoComplete="current-password"
               required
               disabled={submitting}
@@ -99,7 +128,12 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" loading={submitting} className="mt-2 w-full">
+            <Button
+              type="submit"
+              loading={submitting}
+              disabled={isSubmitDisabled}
+              className="mt-2 w-full"
+            >
               {submitting ? "Entrando..." : "Entrar"}
             </Button>
           </form>
