@@ -1,10 +1,16 @@
 import api from "./api";
-import type { Cliente, ClienteInput } from "@/types";
+import { buildQueryString } from "@/lib/queryParams";
+import type { Cliente, ClienteFiltros, ClienteInput } from "@/types";
 
 /** Chamadas à API de Clientes. */
 export const clienteService = {
-  list(): Promise<Cliente[]> {
-    return api.get<Cliente[]>("/clientes").then((r) => r.data);
+  list(filtros?: ClienteFiltros): Promise<Cliente[]> {
+    const query = buildQueryString({
+      nome: filtros?.nome,
+      email: filtros?.email,
+      tipo: filtros?.tipo,
+    });
+    return api.get<Cliente[]>(`/clientes${query}`).then((r) => r.data);
   },
   getById(id: number): Promise<Cliente> {
     return api.get<Cliente>(`/clientes/${id}`).then((r) => r.data);

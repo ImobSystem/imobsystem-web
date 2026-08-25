@@ -1,13 +1,19 @@
 import api from "./api";
-import type { Imovel, ImovelInput } from "@/types";
+import { buildQueryString } from "@/lib/queryParams";
+import type { Imovel, ImovelFiltros, ImovelInput } from "@/types";
 
 /**
  * Chamadas à API de Imóveis. Toda função usa o cliente axios central,
  * então o header Authorization já vai injetado pelo interceptor.
  */
 export const imovelService = {
-  list(): Promise<Imovel[]> {
-    return api.get<Imovel[]>("/imoveis").then((r) => r.data);
+  list(filtros?: ImovelFiltros): Promise<Imovel[]> {
+    const query = buildQueryString({
+      endereco: filtros?.endereco,
+      status: filtros?.status,
+      finalidade: filtros?.finalidade,
+    });
+    return api.get<Imovel[]>(`/imoveis${query}`).then((r) => r.data);
   },
   getById(id: number): Promise<Imovel> {
     return api.get<Imovel>(`/imoveis/${id}`).then((r) => r.data);

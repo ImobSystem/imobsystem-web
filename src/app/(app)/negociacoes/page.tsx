@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorState, LoadingState } from "@/components/ui/States";
+import { FilterBar } from "@/components/ui/FilterBar";
+import { FilterSelect } from "@/components/ui/FilterSelect";
 import { NegociacaoFormModal } from "@/components/negociacoes/NegociacaoFormModal";
 import { usePageAction } from "@/contexts/PageActionContext";
 import { imovelService } from "@/services/imovelService";
@@ -13,9 +15,12 @@ import { negociacaoService } from "@/services/negociacaoService";
 import { getErrorMessage } from "@/services/errors";
 import { formatCurrency, formatDate, STATUS_NEGOCIO_DOT } from "@/lib/format";
 import {
+  FINALIDADE_LABELS,
+  FINALIDADE_OPTIONS,
   STATUS_NEGOCIO_LABELS,
   STATUS_NEGOCIO_OPTIONS,
   type Cliente,
+  type Finalidade,
   type Imovel,
   type Negociacao,
   type StatusNegocio,
@@ -31,6 +36,10 @@ export default function NegociacoesPage() {
   // Guarda o id da negociação cujo status está sendo alterado (para desabilitar o select).
   const [movingId, setMovingId] = useState<number | null>(null);
 
+  // Filtro por finalidade — o kanban já organiza por status via as colunas,
+  // então não faz sentido filtrar por status de novo aqui.
+  const [finalidade, setFinalidade] = useState<Finalidade | "">("");
+
   usePageAction({ label: "Nova negociação", onClick: () => setFormOpen(true) });
 
   const load = useCallback(async () => {
@@ -38,7 +47,7 @@ export default function NegociacoesPage() {
     setError(null);
     try {
       const [neg, imv, cli] = await Promise.all([
-        negociacaoService.list(),
+        negociacaoService.list({ finalidade: finalidade || undefined }),
         imovelService.list(),
         clienteService.list(),
       ]);
@@ -50,7 +59,7 @@ export default function NegociacoesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [finalidade]);
 
   useEffect(() => {
     load();
@@ -108,6 +117,22 @@ export default function NegociacoesPage() {
         }
       />
 
+      <FilterBar
+        activeCount={finalidade ? 1 : 0}
+        onClear={() => setFinalidade("")}
+      >
+        <FilterSelect
+          label="Finalidade"
+          value={finalidade}
+          onChange={(v) => setFinalidade(v as Finalidade | "")}
+          options={FINALIDADE_OPTIONS.map((f) => ({
+            value: f,
+            label: FINALIDADE_LABELS[f],
+          }))}
+          className="w-40"
+        />
+      </FilterBar>
+
       {loading ? (
         <Card>
           <LoadingState label="Carregando negociações..." />
@@ -115,6 +140,25 @@ export default function NegociacoesPage() {
       ) : error ? (
         <Card>
           <ErrorState message={error} onRetry={load} />
+        </Card>
+      ) : finalidade && negociacoes.length === 0 ? (
+        <Card>
+          <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-1 text-faint opacity-60">
+              <path d="M3 3v18h18" />
+              <path d="M7 15l4-4 3 3 5-6" />
+            </svg>
+            <p className="text-base font-medium text-foreground">
+              Nenhuma negociação encontrada para esse filtro
+            </p>
+            <button
+              type="button"
+              onClick={() => setFinalidade("")}
+              className="mt-1 text-sm font-medium text-accent transition-colors duration-200 hover:text-[var(--accent-hover)]"
+            >
+              Limpar filtros
+            </button>
+          </div>
         </Card>
       ) : (
         // Funil com rolagem horizontal: colunas de largura fixa lado a lado,

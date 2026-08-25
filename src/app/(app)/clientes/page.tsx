@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { IconAction } from "@/components/ui/IconAction";
+import { FilterBar } from "@/components/ui/FilterBar";
+import { FilterSelect } from "@/components/ui/FilterSelect";
 import {
   EmptyState,
   ErrorState,
@@ -14,11 +16,17 @@ import {
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ClienteFormModal } from "@/components/clientes/ClienteFormModal";
 import { useAsyncList } from "@/hooks/useAsyncList";
+import { useDebounce } from "@/hooks/useDebounce";
 import { usePageAction } from "@/contexts/PageActionContext";
 import { clienteService } from "@/services/clienteService";
 import { getErrorMessage } from "@/services/errors";
 import { TIPO_CLIENTE_TONE } from "@/lib/format";
-import { TIPO_CLIENTE_LABELS, type Cliente } from "@/types";
+import {
+  TIPO_CLIENTE_LABELS,
+  TIPO_CLIENTE_OPTIONS,
+  type Cliente,
+  type TipoCliente,
+} from "@/types";
 
 const EDIT_ICON = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,9 +43,29 @@ const DELETE_ICON = (
 );
 
 export default function ClientesPage() {
-  const { data: clientes, loading, error, reload } = useAsyncList(
-    clienteService.list,
+  // Busca (nome OU email — o "@" decide qual param vai pro backend) + tipo.
+  const [busca, setBusca] = useState("");
+  const [tipo, setTipo] = useState<TipoCliente | "">("");
+  const debouncedBusca = useDebounce(busca, 400);
+  const buscaPorEmail = debouncedBusca.includes("@");
+
+  const fetchClientes = useCallback(
+    () =>
+      clienteService.list({
+        nome: !buscaPorEmail && debouncedBusca ? debouncedBusca : undefined,
+        email: buscaPorEmail && debouncedBusca ? debouncedBusca : undefined,
+        tipo: tipo || undefined,
+      }),
+    [debouncedBusca, buscaPorEmail, tipo],
   );
+  const { data: clientes, loading, error, reload } = useAsyncList(fetchClientes);
+
+  const activeFilterCount = [busca, tipo].filter(Boolean).length;
+
+  function clearFilters() {
+    setBusca("");
+    setTipo("");
+  }
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Cliente | null>(null);
@@ -80,6 +108,25 @@ export default function ClientesPage() {
         action={<Button size="sm" onClick={openCreate}>Cadastrar cliente</Button>}
       />
 
+      <FilterBar
+        searchValue={busca}
+        onSearchChange={setBusca}
+        searchPlaceholder="Buscar por nome ou email..."
+        activeCount={activeFilterCount}
+        onClear={clearFilters}
+      >
+        <FilterSelect
+          label="Tipo"
+          value={tipo}
+          onChange={(v) => setTipo(v as TipoCliente | "")}
+          options={TIPO_CLIENTE_OPTIONS.map((t) => ({
+            value: t,
+            label: TIPO_CLIENTE_LABELS[t],
+          }))}
+          className="w-40"
+        />
+      </FilterBar>
+
       {loading ? (
         <Card>
           <LoadingState label="Carregando clientes..." />
@@ -90,11 +137,32 @@ export default function ClientesPage() {
         </Card>
       ) : clientes.length === 0 ? (
         <Card>
-          <EmptyState
-            title="Nenhum cliente cadastrado"
-            description="Cadastre clientes para vinculá-los às negociações."
-            action={<Button size="sm" onClick={openCreate}>Cadastrar cliente</Button>}
-          />
+          {activeFilterCount > 0 ? (
+            <EmptyState
+              icon={
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              }
+              title="Nenhum cliente encontrado para esses filtros"
+              action={
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-sm font-medium text-accent transition-colors duration-200 hover:text-[var(--accent-hover)]"
+                >
+                  Limpar filtros
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState
+              title="Nenhum cliente cadastrado"
+              description="Cadastre clientes para vinculá-los às negociações."
+              action={<Button size="sm" onClick={openCreate}>Cadastrar cliente</Button>}
+            />
+          )}
         </Card>
       ) : (
         <>

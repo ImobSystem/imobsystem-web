@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { IconAction } from "@/components/ui/IconAction";
+import { FilterBar } from "@/components/ui/FilterBar";
+import { FilterSelect } from "@/components/ui/FilterSelect";
 import {
   EmptyState,
   ErrorState,
@@ -14,6 +16,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImovelFormModal } from "@/components/imoveis/ImovelFormModal";
 import { useAsyncList } from "@/hooks/useAsyncList";
+import { useDebounce } from "@/hooks/useDebounce";
 import { usePageAction } from "@/contexts/PageActionContext";
 import { imovelService } from "@/services/imovelService";
 import { getErrorMessage } from "@/services/errors";
@@ -21,8 +24,12 @@ import { STATUS_IMOVEL_TONE } from "@/lib/format";
 import { buildThumbUrl } from "@/lib/foto";
 import {
   FINALIDADE_LABELS,
+  FINALIDADE_OPTIONS,
   STATUS_IMOVEL_LABELS,
+  STATUS_IMOVEL_OPTIONS,
+  type Finalidade,
   type Imovel,
+  type StatusImovel,
 } from "@/types";
 
 const EDIT_ICON = (
@@ -61,9 +68,34 @@ function FotoThumb({ imovel }: { imovel: Imovel }) {
 }
 
 export default function ImoveisPage() {
-  const { data: imoveis, loading, error, reload } = useAsyncList(
-    imovelService.list,
+  // Filtros: busca por endereço (debounced) + dois dropdowns, aplicados server-side.
+  const [endereco, setEndereco] = useState("");
+  const [status, setStatus] = useState<StatusImovel | "">("");
+  const [finalidade, setFinalidade] = useState<Finalidade | "">("");
+  const debouncedEndereco = useDebounce(endereco, 400);
+
+  const fetchImoveis = useCallback(
+    () =>
+      imovelService.list({
+        endereco: debouncedEndereco || undefined,
+        status: status || undefined,
+        finalidade: finalidade || undefined,
+      }),
+    [debouncedEndereco, status, finalidade],
   );
+  const { data: imoveis, loading, error, reload } = useAsyncList(fetchImoveis);
+
+  // Conta os filtros já digitados/selecionados (não espera o debounce) — o
+  // botão "Limpar" e a mensagem de vazio reagem na hora.
+  const activeFilterCount = [endereco, status, finalidade].filter(
+    Boolean,
+  ).length;
+
+  function clearFilters() {
+    setEndereco("");
+    setStatus("");
+    setFinalidade("");
+  }
 
   // Modal de formulário: `editing` decide entre criar (null) e editar (Imovel).
   const [formOpen, setFormOpen] = useState(false);
@@ -108,6 +140,35 @@ export default function ImoveisPage() {
         action={<Button size="sm" onClick={openCreate}>Cadastrar imóvel</Button>}
       />
 
+      <FilterBar
+        searchValue={endereco}
+        onSearchChange={setEndereco}
+        searchPlaceholder="Buscar por endereço..."
+        activeCount={activeFilterCount}
+        onClear={clearFilters}
+      >
+        <FilterSelect
+          label="Status"
+          value={status}
+          onChange={(v) => setStatus(v as StatusImovel | "")}
+          options={STATUS_IMOVEL_OPTIONS.map((s) => ({
+            value: s,
+            label: STATUS_IMOVEL_LABELS[s],
+          }))}
+          className="w-40"
+        />
+        <FilterSelect
+          label="Finalidade"
+          value={finalidade}
+          onChange={(v) => setFinalidade(v as Finalidade | "")}
+          options={FINALIDADE_OPTIONS.map((f) => ({
+            value: f,
+            label: FINALIDADE_LABELS[f],
+          }))}
+          className="w-40"
+        />
+      </FilterBar>
+
       {loading ? (
         <Card>
           <LoadingState label="Carregando imóveis..." />
@@ -118,11 +179,32 @@ export default function ImoveisPage() {
         </Card>
       ) : imoveis.length === 0 ? (
         <Card>
-          <EmptyState
-            title="Nenhum imóvel cadastrado"
-            description="Comece cadastrando o primeiro imóvel da sua imobiliária."
-            action={<Button size="sm" onClick={openCreate}>Cadastrar imóvel</Button>}
-          />
+          {activeFilterCount > 0 ? (
+            <EmptyState
+              icon={
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              }
+              title="Nenhum imóvel encontrado para esses filtros"
+              action={
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-sm font-medium text-accent transition-colors duration-200 hover:text-[var(--accent-hover)]"
+                >
+                  Limpar filtros
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState
+              title="Nenhum imóvel cadastrado"
+              description="Comece cadastrando o primeiro imóvel da sua imobiliária."
+              action={<Button size="sm" onClick={openCreate}>Cadastrar imóvel</Button>}
+            />
+          )}
         </Card>
       ) : (
         <>

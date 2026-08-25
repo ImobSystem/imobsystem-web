@@ -11,18 +11,22 @@ export function LoadingState({ label = "Carregando..." }: { label?: string }) {
   );
 }
 
-/** Estado vazio (nenhum registro), com CTA opcional. */
+/** Estado vazio (nenhum registro, ou nenhum resultado de filtro), com CTA opcional. */
 export function EmptyState({
   title,
   description,
   action,
+  icon,
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  /** Ícone sutil acima do título — usado no "sem resultados para esses filtros". */
+  icon?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+      {icon && <div className="mb-1 text-faint opacity-60">{icon}</div>}
       <p className="text-base font-medium text-foreground">{title}</p>
       {description && (
         <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
