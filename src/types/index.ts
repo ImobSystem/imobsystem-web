@@ -100,6 +100,8 @@ export interface Imovel {
   finalidade: Finalidade;
   statusImovel: StatusImovel;
   imobiliariaId: number;
+  /** URLs das fotos do imóvel (Cloudinary), na ordem cadastrada. */
+  fotos: string[];
 }
 
 /** Corpo de POST/PUT /imoveis (sem imobiliariaId/corretor — vêm do token). */
@@ -109,6 +111,16 @@ export interface ImovelInput {
   area_m2: number;
   finalidade: Finalidade;
   statusImovel: StatusImovel;
+}
+
+/**
+ * Foto de um imóvel. A URL já aponta pro Cloudinary — o backend só guarda
+ * a referência (upload é feito direto do front pro Cloudinary).
+ */
+export interface FotoImovel {
+  id: number;
+  url: string;
+  imovelId: number;
 }
 
 /* ============================ Corretores ============================ */

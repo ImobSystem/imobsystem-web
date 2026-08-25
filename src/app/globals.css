@@ -1,63 +1,155 @@
 @import "tailwindcss";
 
 /*
- * Dark mode manual (baseado em classe, não em prefers-color-scheme).
- * Este custom-variant faz o `dark:` do Tailwind v4 valer sempre que o
- * elemento estiver dentro de um ancestral com a classe `.dark` — que
- * o ThemeProvider aplica/remove no <html>.
+ * Dark mode manual, mas INVERTIDO do padrão usual: o tema ESCURO é o default,
+ * declarado direto em `:root` (sem precisar de classe). O tema claro é a
+ * exceção, ativada pela classe `.light` no <html> — é isso que o
+ * ThemeProvider aplica/remove.
+ *
+ * Por isso os poucos lugares que precisam de uma regra condicional por tema
+ * (ex.: o crossfade do ícone sol/lua) usam este `light:` — não `dark:`.
  */
-@custom-variant dark (&:where(.dark, .dark *));
-
-:root {
-  --background: #e3e7ec; /* fundo da pagina — cinza suave */
-  --surface: #f0f2f5; /* cards/paineis — "branco" levemente acinzentado */
-  --foreground: #0f172a; /* slate-900 */
-}
-
-.dark {
-  --background: #020617; /* slate-950 */
-  --surface: #0f172a; /* slate-900 */
-  --foreground: #e2e8f0; /* slate-200 */
-}
+@custom-variant light (&:where(.light, .light *));
 
 /*
  * ============================================================
- *  COR DE MARCA (PRIMARY) — o "um lugar só" para trocar no futuro.
+ *  DESIGN TOKENS — a única fonte de verdade das cores do sistema.
  * ============================================================
- * Toda a UI usa as classes `primary-*` (bg-primary-600, text-primary-700,
- * focus:ring-primary-500/50, ...). Para mudar a identidade visual do sistema
- * inteiro, basta reescrever os hex abaixo — nada nos componentes precisa mudar.
- *
- * Paleta atual: roxo (escala "violet"). Tons-chave:
- *   primary-600 #7C3AED (padrão)  · primary-700 #6D28D9 (hover)
- *   primary-800 #5B21B6 (escuro)  · primary-100 #EDE9FE (fundos sutis)
- *   primary-300 #C4B5FD (bordas/realces)
+ * "Ember in an obsidian void": canvas quase-preto com viés QUENTE (nunca
+ * cinza/azul frio) + uma única cor de destaque (laranja ember). Nada de cor
+ * hardcoded nos componentes — tudo referencia estas variáveis, direto
+ * (`bg-[var(--bg-base)]`) ou via os aliases Tailwind logo abaixo (`bg-base`,
+ * `text-muted-foreground`, `bg-accent-subtle`...).
  */
-@theme {
-  --color-primary-50: #f5f3ff;
-  --color-primary-100: #ede9fe;
-  --color-primary-200: #ddd6fe;
-  --color-primary-300: #c4b5fd;
-  --color-primary-400: #a78bfa;
-  --color-primary-500: #8b5cf6;
-  --color-primary-600: #7c3aed;
-  --color-primary-700: #6d28d9;
-  --color-primary-800: #5b21b6;
-  --color-primary-900: #4c1d95;
+:root {
+  /* Superfícies — tom quente, nunca cinza frio */
+  --bg-base: #0f0d0a;
+  --bg-surface: #161412;
+  --bg-elevated: #1e1c18;
+  --bg-hover: #28261f;
+
+  /* Bordas — hairline, quase invisíveis */
+  --border-primary: #2a2720;
+  --border-secondary: #3a3730;
+
+  /* Texto */
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #777770;
+
+  /* Accent — ember orange (UMA cor, UM propósito) */
+  --accent: #ff4700;
+  --accent-hover: #e03f00;
+  --accent-subtle: rgba(255, 71, 0, 0.1);
+  --accent-glow-inner: #451e0e;
+  --accent-glow-outer: #8b2e09;
+
+  /* Status — só em badges, nunca em backgrounds grandes */
+  --status-success: #22c55e;
+  --status-success-bg: rgba(34, 197, 94, 0.1);
+  --status-danger: #ef4444;
+  --status-danger-bg: rgba(239, 68, 68, 0.1);
+  --status-warning: #f59e0b;
+  --status-warning-bg: rgba(245, 158, 11, 0.1);
+  --status-info: #3b82f6;
+  --status-info-bg: rgba(59, 130, 246, 0.1);
+
+  color-scheme: dark;
 }
 
+.light {
+  --bg-base: #fafaf8;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f5f4f0;
+  --bg-hover: #edece6;
+
+  --border-primary: #e8e6e0;
+  --border-secondary: #d5d3cc;
+
+  --text-primary: #0f0d0a;
+  --text-secondary: #555550;
+  --text-muted: #999990;
+
+  --accent: #ff4700;
+  --accent-hover: #e03f00;
+  --accent-subtle: rgba(255, 71, 0, 0.07);
+  --accent-glow-inner: rgba(255, 71, 0, 0.15);
+  --accent-glow-outer: rgba(255, 71, 0, 0.1);
+
+  --status-success: #16a34a;
+  --status-success-bg: rgba(22, 163, 74, 0.08);
+  --status-danger: #dc2626;
+  --status-danger-bg: rgba(220, 38, 38, 0.08);
+  --status-warning: #d97706;
+  --status-warning-bg: rgba(217, 119, 6, 0.08);
+  --status-info: #2563eb;
+  --status-info-bg: rgba(37, 99, 235, 0.08);
+
+  color-scheme: light;
+}
+
+/*
+ * Ponte pro Tailwind: registra os tokens acima como cores de tema, o que gera
+ * as utilities `bg-*`/`text-*`/`border-*` correspondentes (ex.: `bg-surface`,
+ * `text-muted-foreground`, `border-border`, `bg-accent-subtle`).
+ */
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-hover: var(--bg-hover);
+  --color-border: var(--border-primary);
+  --color-border-strong: var(--border-secondary);
+  --color-foreground: var(--text-primary);
+  --color-muted-foreground: var(--text-secondary);
+  --color-faint: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-success: var(--status-success);
+  --color-success-bg: var(--status-success-bg);
+  --color-danger: var(--status-danger);
+  --color-danger-bg: var(--status-danger-bg);
+  --color-warning: var(--status-warning);
+  --color-warning-bg: var(--status-warning-bg);
+  --color-info: var(--status-info);
+  --color-info-bg: var(--status-info-bg);
+  --font-sans: var(--font-inter);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   /* Suaviza a troca de tema. */
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Fade-in suave para modais e overlays (ver Modal.tsx). */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
 }

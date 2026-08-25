@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { NegociacaoFormModal } from "@/components/negociacoes/NegociacaoFormModal";
+import { usePageAction } from "@/contexts/PageActionContext";
 import { imovelService } from "@/services/imovelService";
 import { clienteService } from "@/services/clienteService";
 import { negociacaoService } from "@/services/negociacaoService";
 import { getErrorMessage } from "@/services/errors";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate, STATUS_NEGOCIO_DOT } from "@/lib/format";
 import {
   STATUS_NEGOCIO_LABELS,
   STATUS_NEGOCIO_OPTIONS,
@@ -19,16 +20,6 @@ import {
   type Negociacao,
   type StatusNegocio,
 } from "@/types";
-
-/** Barra de cor no topo de cada coluna do funil. */
-const COLUMN_ACCENT: Record<StatusNegocio, string> = {
-  OPORTUNIDADE: "bg-slate-400",
-  EM_ATENDIMENTO: "bg-blue-500",
-  VISITA_AGENDADA: "bg-violet-500",
-  PROPOSTA: "bg-amber-500",
-  GANHO: "bg-green-500",
-  PERDIDO: "bg-red-500",
-};
 
 export default function NegociacoesPage() {
   const [negociacoes, setNegociacoes] = useState<Negociacao[]>([]);
@@ -39,6 +30,8 @@ export default function NegociacoesPage() {
   const [formOpen, setFormOpen] = useState(false);
   // Guarda o id da negociação cujo status está sendo alterado (para desabilitar o select).
   const [movingId, setMovingId] = useState<number | null>(null);
+
+  usePageAction({ label: "Nova negociação", onClick: () => setFormOpen(true) });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,7 +104,7 @@ export default function NegociacoesPage() {
         title="Negociações"
         subtitle="Funil de vendas e locações"
         action={
-          <Button onClick={() => setFormOpen(true)}>Nova negociação</Button>
+          <Button size="sm" onClick={() => setFormOpen(true)}>Nova negociação</Button>
         }
       />
 
@@ -124,34 +117,33 @@ export default function NegociacoesPage() {
           <ErrorState message={error} onRetry={load} />
         </Card>
       ) : (
-        // Funil em grid responsivo: todas as colunas cabem na largura da tela
-        // (6 numa linha em telas largas), quebrando para menos colunas quando
-        // estreito — sem rolagem horizontal.
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        // Funil com rolagem horizontal: colunas de largura fixa lado a lado,
+        // como um kanban de verdade — não empilha em telas estreitas.
+        <div className="flex gap-3 overflow-x-auto pb-2">
           {STATUS_NEGOCIO_OPTIONS.map((status) => {
             const items = byStatus.get(status) ?? [];
             return (
               <div
                 key={status}
-                className="flex min-w-0 flex-col rounded-2xl bg-slate-50/80 ring-1 ring-slate-200 dark:bg-slate-900/60 dark:ring-slate-800"
+                className="flex w-[280px] shrink-0 flex-col rounded-xl border border-border bg-surface p-4"
               >
                 {/* Cabeçalho da coluna */}
-                <div className="flex items-center gap-2 px-4 pt-4">
+                <div className="flex items-center gap-2">
                   <span
-                    className={`h-2.5 w-2.5 rounded-full ${COLUMN_ACCENT[status]}`}
+                    className={`h-2 w-2 rounded-full ${STATUS_NEGOCIO_DOT[status]}`}
                   />
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  <h3 className="text-[13px] font-semibold text-foreground">
                     {STATUS_NEGOCIO_LABELS[status]}
                   </h3>
-                  <span className="ml-auto rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  <span className="ml-auto text-xs font-medium text-faint">
                     {items.length}
                   </span>
                 </div>
 
                 {/* Cards */}
-                <div className="flex flex-1 flex-col gap-3 p-4">
+                <div className="mt-4 flex flex-1 flex-col">
                   {items.length === 0 ? (
-                    <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+                    <p className="py-6 text-center text-xs text-faint">
                       Nenhuma negociação
                     </p>
                   ) : (
@@ -161,37 +153,43 @@ export default function NegociacoesPage() {
                       return (
                         <div
                           key={n.id}
-                          className="rounded-xl border border-slate-200 bg-surface p-3 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-800/60"
+                          className="mb-2 cursor-pointer rounded-lg border border-border bg-elevated p-3.5 transition-all duration-150 hover:-translate-y-px hover:border-border-strong"
                         >
-                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          <p className="text-[15px] font-semibold text-foreground">
                             {formatCurrency(n.valor)}
                           </p>
-                          <p className="mt-1 truncate text-sm text-slate-700 dark:text-slate-300">
+                          <p className="mt-1 truncate text-[13px] text-muted-foreground">
                             {imovel?.endereco ?? `Imóvel #${n.imovelId}`}
                           </p>
-                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                          <p className="mt-1.5 truncate text-xs text-faint">
                             {cliente?.nome ?? `Cliente #${n.clienteId}`}
                           </p>
 
-                          {/* Mudança de status via PUT /negociacoes/{id}/status */}
-                          <select
-                            value={n.statusNegocio}
-                            disabled={movingId === n.id}
-                            onChange={(e) =>
-                              handleChangeStatus(
-                                n,
-                                e.target.value as StatusNegocio,
-                              )
-                            }
-                            className="mt-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs text-slate-600 outline-none transition focus:border-primary-500 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:[color-scheme:dark]"
-                            aria-label="Mover para outro status"
-                          >
-                            {STATUS_NEGOCIO_OPTIONS.map((s) => (
-                              <option key={s} value={s}>
-                                {STATUS_NEGOCIO_LABELS[s]}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="mt-2.5 flex items-center justify-between gap-2">
+                            <span className="shrink-0 text-[11px] text-faint">
+                              {formatDate(n.dataInicio)}
+                            </span>
+                            {/* Mudança de status via PUT /negociacoes/{id}/status */}
+                            <select
+                              value={n.statusNegocio}
+                              disabled={movingId === n.id}
+                              onChange={(e) =>
+                                handleChangeStatus(
+                                  n,
+                                  e.target.value as StatusNegocio,
+                                )
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                              className="min-w-0 flex-1 rounded-md border border-border bg-surface px-2 py-1 text-xs text-muted-foreground outline-none transition-colors duration-150 focus:border-accent disabled:opacity-60"
+                              aria-label="Mover para outro status"
+                            >
+                              {STATUS_NEGOCIO_OPTIONS.map((s) => (
+                                <option key={s} value={s}>
+                                  {STATUS_NEGOCIO_LABELS[s]}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                       );
                     })

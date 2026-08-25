@@ -21,16 +21,21 @@ const STORAGE_KEY = "imob:theme";
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-/** Aplica/remove a classe `.dark` no <html> e persiste a escolha. */
+/**
+ * Aplica/remove a classe `.light` no <html> e persiste a escolha.
+ *
+ * O tema ESCURO é o padrão do design (valores direto em `:root`) — só
+ * precisamos de uma classe quando o tema é o claro, a exceção.
+ */
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
-  root.classList.toggle("dark", theme === "dark");
+  root.classList.toggle("light", theme === "light");
   window.localStorage.setItem(STORAGE_KEY, theme);
 }
 
-/** Lê o tema inicial: preferência salva > preferência do SO > claro. */
+/** Lê o tema inicial: preferência salva > preferência do SO > escuro. */
 function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   const saved = window.localStorage.getItem(STORAGE_KEY);
   if (saved === "light" || saved === "dark") return saved;
   return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -39,9 +44,9 @@ function getInitialTheme(): Theme {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // A classe .dark já é aplicada por um script inline no <head> (evita flash);
+  // A classe .light já é aplicada por um script inline no <head> (evita flash);
   // aqui só sincronizamos o estado do React com o que já está no DOM.
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
     setThemeState(getInitialTheme());
