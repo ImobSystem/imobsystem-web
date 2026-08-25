@@ -9,6 +9,18 @@ import { getErrorMessage } from "@/services/errors";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { useFormValidation, type ValidationRules } from "@/hooks/useFormValidation";
+import { maskCNPJ, maskTelefone } from "@/lib/masks";
+import {
+  cnpjValido,
+  compose,
+  differentFrom,
+  email as emailRule,
+  matches,
+  minLength,
+  required,
+  telefoneValido,
+} from "@/lib/validators";
 import type { RegistroRequest, Usuario } from "@/types";
 
 /** Campos do formulário: o payload da API + confirmação de senha (só no front). */
@@ -28,45 +40,35 @@ const emptyForm: FormState = {
   confirmarSenha: "",
 };
 
-/** Erros por campo (chave = nome do campo). */
-type FieldErrors = Partial<Record<keyof FormState, string>>;
-
-// Regex simples de e-mail (suficiente para validação de front; o back valida de verdade).
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Valida o formulário e devolve os erros por campo (objeto vazio = tudo ok). */
-function validate(form: FormState): FieldErrors {
-  const errors: FieldErrors = {};
-
-  // Todos os campos são obrigatórios.
-  (Object.keys(emptyForm) as (keyof FormState)[]).forEach((key) => {
-    if (!form[key].trim()) errors[key] = "Campo obrigatório.";
-  });
-
-  if (form.emailImobiliaria && !EMAIL_REGEX.test(form.emailImobiliaria)) {
-    errors.emailImobiliaria = "E-mail inválido.";
-  }
-  if (form.emailAdmin && !EMAIL_REGEX.test(form.emailAdmin)) {
-    errors.emailAdmin = "E-mail inválido.";
-  }
-  if (form.senha && form.senha.length < 6) {
-    errors.senha = "Mínimo de 6 caracteres.";
-  }
-  if (form.confirmarSenha && form.confirmarSenha !== form.senha) {
-    errors.confirmarSenha = "As senhas não coincidem.";
-  }
-
-  return errors;
-}
+const rules: ValidationRules<FormState> = {
+  nomeImobiliaria: compose(required(), minLength(3)),
+  cnpj: compose(required(), cnpjValido()),
+  emailImobiliaria: compose(required(), emailRule()),
+  telefone: compose(required(), telefoneValido()),
+  nomeAdmin: compose(required(), minLength(3)),
+  emailAdmin: compose<string, FormState>(
+    required(),
+    emailRule(),
+    differentFrom("emailImobiliaria", "Deve ser diferente do e-mail da imobiliária."),
+  ),
+  senha: compose(required(), minLength(6)),
+  creci: required(),
+  confirmarSenha: compose<string, FormState>(
+    required(),
+    matches("senha", "As senhas não coincidem."),
+  ),
+};
 
 export default function RegistroPage() {
   const { loginComToken, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState<FormState>(emptyForm);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const { getError, handleBlur, handleChange, validateAll, setFieldError, isSubmitDisabled } =
+    useFormValidation<FormState>(rules);
 
   // Se já estiver logado, não faz sentido ver o registro.
   useEffect(() => {
@@ -75,21 +77,18 @@ export default function RegistroPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  /** Atualiza um campo e limpa o erro dele conforme o usuário digita. */
+  /** Atualiza um campo e revalida em tempo real se ele já foi tocado. */
   function setField(key: keyof FormState, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-    setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+    const next = { ...form, [key]: value };
+    setForm(next);
+    handleChange(key, value, next);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setApiError(null);
 
-    const errors = validate(form);
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      return;
-    }
+    if (!validateAll(form)) return;
 
     setSubmitting(true);
     try {
@@ -116,7 +115,12 @@ export default function RegistroPage() {
       router.replace("/dashboard");
     } catch (err) {
       // Ex.: e-mail já cadastrado — a mensagem vem do backend via getErrorMessage.
-      setApiError(getErrorMessage(err));
+      const message = getErrorMessage(err);
+      if (/e-?mail/i.test(message)) {
+        setFieldError("emailImobiliaria", message);
+      } else {
+        setApiError(message);
+      }
       setSubmitting(false);
     }
     // Em caso de sucesso não desligamos `submitting`: a navegação desmonta a tela.
@@ -156,7 +160,8 @@ export default function RegistroPage() {
                 label="Nome da imobiliária"
                 value={form.nomeImobiliaria}
                 onChange={(e) => setField("nomeImobiliaria", e.target.value)}
-                error={fieldErrors.nomeImobiliaria}
+                onBlur={() => handleBlur("nomeImobiliaria", form.nomeImobiliaria, form)}
+                error={getError("nomeImobiliaria")}
                 disabled={submitting}
               />
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -164,18 +169,22 @@ export default function RegistroPage() {
                   id="cnpj"
                   label="CNPJ"
                   placeholder="00.000.000/0000-00"
+                  inputMode="numeric"
                   value={form.cnpj}
-                  onChange={(e) => setField("cnpj", e.target.value)}
-                  error={fieldErrors.cnpj}
+                  onChange={(e) => setField("cnpj", maskCNPJ(e.target.value))}
+                  onBlur={() => handleBlur("cnpj", form.cnpj, form)}
+                  error={getError("cnpj")}
                   disabled={submitting}
                 />
                 <Input
                   id="telefone"
                   label="Telefone"
                   placeholder="(00) 00000-0000"
+                  inputMode="numeric"
                   value={form.telefone}
-                  onChange={(e) => setField("telefone", e.target.value)}
-                  error={fieldErrors.telefone}
+                  onChange={(e) => setField("telefone", maskTelefone(e.target.value))}
+                  onBlur={() => handleBlur("telefone", form.telefone, form)}
+                  error={getError("telefone")}
                   disabled={submitting}
                 />
               </div>
@@ -186,7 +195,8 @@ export default function RegistroPage() {
                 placeholder="contato@imobiliaria.com"
                 value={form.emailImobiliaria}
                 onChange={(e) => setField("emailImobiliaria", e.target.value)}
-                error={fieldErrors.emailImobiliaria}
+                onBlur={() => handleBlur("emailImobiliaria", form.emailImobiliaria, form)}
+                error={getError("emailImobiliaria")}
                 disabled={submitting}
               />
             </section>
@@ -202,7 +212,8 @@ export default function RegistroPage() {
                   label="Seu nome"
                   value={form.nomeAdmin}
                   onChange={(e) => setField("nomeAdmin", e.target.value)}
-                  error={fieldErrors.nomeAdmin}
+                  onBlur={() => handleBlur("nomeAdmin", form.nomeAdmin, form)}
+                  error={getError("nomeAdmin")}
                   disabled={submitting}
                 />
                 <Input
@@ -210,7 +221,8 @@ export default function RegistroPage() {
                   label="CRECI"
                   value={form.creci}
                   onChange={(e) => setField("creci", e.target.value)}
-                  error={fieldErrors.creci}
+                  onBlur={() => handleBlur("creci", form.creci, form)}
+                  error={getError("creci")}
                   disabled={submitting}
                 />
               </div>
@@ -221,7 +233,8 @@ export default function RegistroPage() {
                 placeholder="voce@imobiliaria.com"
                 value={form.emailAdmin}
                 onChange={(e) => setField("emailAdmin", e.target.value)}
-                error={fieldErrors.emailAdmin}
+                onBlur={() => handleBlur("emailAdmin", form.emailAdmin, form)}
+                error={getError("emailAdmin")}
                 autoComplete="email"
                 disabled={submitting}
               />
@@ -233,7 +246,8 @@ export default function RegistroPage() {
                   placeholder="Mínimo 6 caracteres"
                   value={form.senha}
                   onChange={(e) => setField("senha", e.target.value)}
-                  error={fieldErrors.senha}
+                  onBlur={() => handleBlur("senha", form.senha, form)}
+                  error={getError("senha")}
                   autoComplete="new-password"
                   disabled={submitting}
                 />
@@ -244,7 +258,8 @@ export default function RegistroPage() {
                   placeholder="••••••••"
                   value={form.confirmarSenha}
                   onChange={(e) => setField("confirmarSenha", e.target.value)}
-                  error={fieldErrors.confirmarSenha}
+                  onBlur={() => handleBlur("confirmarSenha", form.confirmarSenha, form)}
+                  error={getError("confirmarSenha")}
                   autoComplete="new-password"
                   disabled={submitting}
                 />
@@ -261,7 +276,12 @@ export default function RegistroPage() {
               </div>
             )}
 
-            <Button type="submit" loading={submitting} className="w-full">
+            <Button
+              type="submit"
+              loading={submitting}
+              disabled={isSubmitDisabled}
+              className="w-full"
+            >
               {submitting ? "Criando conta..." : "Criar conta"}
             </Button>
           </form>

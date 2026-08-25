@@ -7,6 +7,15 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { negociacaoService } from "@/services/negociacaoService";
 import { getErrorMessage } from "@/services/errors";
+import { useFormValidation, type ValidationRules } from "@/hooks/useFormValidation";
+import {
+  compose,
+  optionalDateAfter,
+  positiveNumberString,
+  required,
+  selectRequired,
+  validDate,
+} from "@/lib/validators";
 import {
   FINALIDADE_LABELS,
   FINALIDADE_OPTIONS,
@@ -51,6 +60,16 @@ function initialForm(): FormState {
   };
 }
 
+const rules: ValidationRules<FormState> = {
+  finalidade: selectRequired(),
+  statusNegocio: selectRequired(),
+  valor: compose(required(), positiveNumberString()),
+  imovelId: selectRequired("Selecione um imóvel."),
+  clienteId: selectRequired("Selecione um cliente."),
+  dataInicio: compose(required(), validDate()),
+  dataFim: optionalDateAfter<FormState>("dataInicio"),
+};
+
 export function NegociacaoFormModal({
   open,
   imoveis,
@@ -62,19 +81,26 @@ export function NegociacaoFormModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { getError, handleBlur, handleChange, validateAll, reset, isSubmitDisabled } =
+    useFormValidation<FormState>(rules);
+
   useEffect(() => {
     if (open) {
       setForm(initialForm());
       setError(null);
+      reset();
     }
   }, [open]);
 
+  function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
+    const next = { ...form, [key]: value };
+    setForm(next);
+    handleChange(key, value, next);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!form.imovelId || !form.clienteId) {
-      setError("Selecione um imóvel e um cliente.");
-      return;
-    }
+    if (!validateAll(form)) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -106,7 +132,9 @@ export function NegociacaoFormModal({
           id="imovelId"
           label="Imóvel"
           value={form.imovelId}
-          onChange={(e) => setForm({ ...form, imovelId: e.target.value })}
+          onChange={(e) => setField("imovelId", e.target.value)}
+          onBlur={() => handleBlur("imovelId", form.imovelId, form)}
+          error={getError("imovelId")}
           placeholder="Selecione um imóvel"
           options={imoveis.map((i) => ({
             value: String(i.id),
@@ -119,7 +147,9 @@ export function NegociacaoFormModal({
           id="clienteId"
           label="Cliente"
           value={form.clienteId}
-          onChange={(e) => setForm({ ...form, clienteId: e.target.value })}
+          onChange={(e) => setField("clienteId", e.target.value)}
+          onBlur={() => handleBlur("clienteId", form.clienteId, form)}
+          error={getError("clienteId")}
           placeholder="Selecione um cliente"
           options={clientes.map((c) => ({
             value: String(c.id),
@@ -141,9 +171,9 @@ export function NegociacaoFormModal({
             id="finalidade"
             label="Finalidade"
             value={form.finalidade}
-            onChange={(e) =>
-              setForm({ ...form, finalidade: e.target.value as Finalidade })
-            }
+            onChange={(e) => setField("finalidade", e.target.value as Finalidade)}
+            onBlur={() => handleBlur("finalidade", form.finalidade, form)}
+            error={getError("finalidade")}
             options={FINALIDADE_OPTIONS.map((v) => ({
               value: v,
               label: FINALIDADE_LABELS[v],
@@ -154,12 +184,9 @@ export function NegociacaoFormModal({
             id="statusNegocio"
             label="Status"
             value={form.statusNegocio}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                statusNegocio: e.target.value as StatusNegocio,
-              })
-            }
+            onChange={(e) => setField("statusNegocio", e.target.value as StatusNegocio)}
+            onBlur={() => handleBlur("statusNegocio", form.statusNegocio, form)}
+            error={getError("statusNegocio")}
             options={STATUS_NEGOCIO_OPTIONS.map((v) => ({
               value: v,
               label: STATUS_NEGOCIO_LABELS[v],
@@ -175,7 +202,9 @@ export function NegociacaoFormModal({
           min={0}
           step="0.01"
           value={form.valor}
-          onChange={(e) => setForm({ ...form, valor: e.target.value })}
+          onChange={(e) => setField("valor", e.target.value)}
+          onBlur={() => handleBlur("valor", form.valor, form)}
+          error={getError("valor")}
           required
           disabled={submitting}
         />
@@ -186,7 +215,13 @@ export function NegociacaoFormModal({
             label="Data de início"
             type="date"
             value={form.dataInicio}
-            onChange={(e) => setForm({ ...form, dataInicio: e.target.value })}
+            onChange={(e) => {
+              setField("dataInicio", e.target.value);
+              // dataFim depende de dataInicio — revalida se já tiver sido tocada.
+              handleChange("dataFim", form.dataFim, { ...form, dataInicio: e.target.value });
+            }}
+            onBlur={() => handleBlur("dataInicio", form.dataInicio, form)}
+            error={getError("dataInicio")}
             required
             disabled={submitting}
           />
@@ -195,7 +230,9 @@ export function NegociacaoFormModal({
             label="Data de fim (opcional)"
             type="date"
             value={form.dataFim}
-            onChange={(e) => setForm({ ...form, dataFim: e.target.value })}
+            onChange={(e) => setField("dataFim", e.target.value)}
+            onBlur={() => handleBlur("dataFim", form.dataFim, form)}
+            error={getError("dataFim")}
             disabled={submitting}
           />
         </div>
@@ -218,7 +255,11 @@ export function NegociacaoFormModal({
           >
             Cancelar
           </button>
-          <Button type="submit" loading={submitting} disabled={semImoveis || semClientes}>
+          <Button
+            type="submit"
+            loading={submitting}
+            disabled={semImoveis || semClientes || isSubmitDisabled}
+          >
             Criar negociação
           </Button>
         </div>

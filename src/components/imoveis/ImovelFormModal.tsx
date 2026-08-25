@@ -7,6 +7,16 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { imovelService } from "@/services/imovelService";
 import { getErrorMessage } from "@/services/errors";
+import { useFormValidation, type ValidationRules } from "@/hooks/useFormValidation";
+import { maskCEP } from "@/lib/masks";
+import {
+  cepValido,
+  compose,
+  minLength,
+  positiveNumber,
+  required,
+  selectRequired,
+} from "@/lib/validators";
 import {
   FINALIDADE_LABELS,
   FINALIDADE_OPTIONS,
@@ -35,16 +45,34 @@ const emptyForm: ImovelInput = {
   statusImovel: "DISPONIVEL",
 };
 
+const rules: ValidationRules<ImovelInput> = {
+  endereco: compose(required(), minLength(5)),
+  CEP: compose(required(), cepValido()),
+  area_m2: positiveNumber(),
+  finalidade: selectRequired(),
+  statusImovel: selectRequired(),
+};
+
 export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
   const isEdit = Boolean(imovel);
   const [form, setForm] = useState<ImovelInput>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { getError, handleBlur, handleChange, validateAll, reset, isSubmitDisabled } =
+    useFormValidation<ImovelInput>(rules);
+
+  function setField<K extends keyof ImovelInput>(key: K, value: ImovelInput[K]) {
+    const next = { ...form, [key]: value };
+    setForm(next);
+    handleChange(key, value, next);
+  }
+
   // Preenche (edição) ou limpa (criação) o formulário sempre que abrir.
   useEffect(() => {
     if (!open) return;
     setError(null);
+    reset();
     if (imovel) {
       setForm({
         endereco: imovel.endereco,
@@ -60,6 +88,7 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!validateAll(form)) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -87,7 +116,9 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
           id="endereco"
           label="Endereço"
           value={form.endereco}
-          onChange={(e) => setForm({ ...form, endereco: e.target.value })}
+          onChange={(e) => setField("endereco", e.target.value)}
+          onBlur={() => handleBlur("endereco", form.endereco, form)}
+          error={getError("endereco")}
           required
           disabled={submitting}
         />
@@ -95,8 +126,11 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
           <Input
             id="cep"
             label="CEP"
+            inputMode="numeric"
             value={form.CEP}
-            onChange={(e) => setForm({ ...form, CEP: e.target.value })}
+            onChange={(e) => setField("CEP", maskCEP(e.target.value))}
+            onBlur={() => handleBlur("CEP", form.CEP, form)}
+            error={getError("CEP")}
             placeholder="00000-000"
             required
             disabled={submitting}
@@ -108,9 +142,9 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
             min={0}
             step="0.01"
             value={form.area_m2 || ""}
-            onChange={(e) =>
-              setForm({ ...form, area_m2: Number(e.target.value) })
-            }
+            onChange={(e) => setField("area_m2", Number(e.target.value))}
+            onBlur={() => handleBlur("area_m2", form.area_m2, form)}
+            error={getError("area_m2")}
             required
             disabled={submitting}
           />
@@ -120,9 +154,9 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
             id="finalidade"
             label="Finalidade"
             value={form.finalidade}
-            onChange={(e) =>
-              setForm({ ...form, finalidade: e.target.value as Finalidade })
-            }
+            onChange={(e) => setField("finalidade", e.target.value as Finalidade)}
+            onBlur={() => handleBlur("finalidade", form.finalidade, form)}
+            error={getError("finalidade")}
             options={FINALIDADE_OPTIONS.map((v) => ({
               value: v,
               label: FINALIDADE_LABELS[v],
@@ -133,12 +167,9 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
             id="statusImovel"
             label="Status"
             value={form.statusImovel}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                statusImovel: e.target.value as StatusImovel,
-              })
-            }
+            onChange={(e) => setField("statusImovel", e.target.value as StatusImovel)}
+            onBlur={() => handleBlur("statusImovel", form.statusImovel, form)}
+            error={getError("statusImovel")}
             options={STATUS_IMOVEL_OPTIONS.map((v) => ({
               value: v,
               label: STATUS_IMOVEL_LABELS[v],
@@ -165,7 +196,7 @@ export function ImovelFormModal({ open, imovel, onClose, onSaved }: Props) {
           >
             Cancelar
           </button>
-          <Button type="submit" loading={submitting}>
+          <Button type="submit" loading={submitting} disabled={isSubmitDisabled}>
             {isEdit ? "Salvar alterações" : "Cadastrar"}
           </Button>
         </div>
