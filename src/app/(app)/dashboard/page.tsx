@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/States";
+import { CaptacoesChart } from "@/components/dashboard/CaptacoesChart";
+import { useAuth } from "@/contexts/AuthContext";
 import { imovelService } from "@/services/imovelService";
 import { corretorService } from "@/services/corretorService";
 import { clienteService } from "@/services/clienteService";
@@ -17,6 +19,7 @@ import {
 } from "@/lib/format";
 import {
   STATUS_NEGOCIO_LABELS,
+  type Captacao,
   type Cliente,
   type Imovel,
   type Negociacao,
@@ -61,12 +64,18 @@ const ICON_PROPS = {
 };
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [data, setData] = useState<DashboardData>(EMPTY);
   const [loading, setLoading] = useState(true);
   // Seções que falharam ao carregar (ex.: ["Corretores"]).
   const [warnings, setWarnings] = useState<string[]>([]);
   // Preenchido só quando TODOS os endpoints falham (erro de tela cheia).
   const [fatalError, setFatalError] = useState<string | null>(null);
+
+  // Captações por corretor — endpoint separado, só acessível pelo ADMIN.
+  const [captacoes, setCaptacoes] = useState<Captacao[] | null>(null);
+  const [captacoesLoading, setCaptacoesLoading] = useState(true);
+  const [captacoesError, setCaptacoesError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -124,6 +133,25 @@ export default function DashboardPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const loadCaptacoes = useCallback(async () => {
+    setCaptacoesLoading(true);
+    setCaptacoesError(null);
+    try {
+      const result = await corretorService.listarCaptacoes();
+      setCaptacoes(result);
+    } catch (err) {
+      setCaptacoesError(getErrorMessage(err));
+    } finally {
+      setCaptacoesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user?.perfil === "ADMIN") {
+      loadCaptacoes();
+    }
+  }, [user, loadCaptacoes]);
 
   if (fatalError) {
     return (
@@ -325,6 +353,15 @@ export default function DashboardPage() {
           )}
         </Card>
       </div>
+
+      {user?.perfil === "ADMIN" && (
+        <CaptacoesChart
+          data={captacoes}
+          loading={captacoesLoading}
+          error={captacoesError}
+          onRetry={loadCaptacoes}
+        />
+      )}
     </>
   );
 }

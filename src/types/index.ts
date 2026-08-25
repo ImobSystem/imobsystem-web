@@ -151,6 +151,13 @@ export interface CorretorInput {
   imobiliariaId: number;
 }
 
+/** Total de imóveis captados por corretor (GET /corretores/captacoes, só ADMIN). */
+export interface Captacao {
+  corretorId: number;
+  nomeCorretor: string;
+  totalCaptacoes: number;
+}
+
 /* ============================ Clientes ============================ */
 
 export type TipoCliente = "COMPRADOR" | "LOCATARIO" | "PROPRIETARIO";
