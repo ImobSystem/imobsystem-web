@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -11,24 +11,44 @@ import {
   LoadingState,
 } from "@/components/ui/States";
 import { CorretorFormModal } from "@/components/corretores/CorretorFormModal";
+import { AdminOnly } from "@/components/AdminOnly";
 import { useAsyncList } from "@/hooks/useAsyncList";
 import { usePageAction } from "@/contexts/PageActionContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { corretorService } from "@/services/corretorService";
-import { PERFIL_LABELS } from "@/types";
+import { PERFIL_LABELS, type Corretor } from "@/types";
 
+/**
+ * Gestão da equipe — exclusiva do ADMIN. O item nem aparece no menu do
+ * CORRETOR, mas a URL é digitável: por isso a tela também se protege via
+ * <AdminOnly>. (A API é a autoridade final — o backend já recusa o cadastro
+ * de corretor por outros perfis.)
+ *
+ * `isAdmin` também guarda o fetch e o atalho "Cadastrar corretor" do Header:
+ * <AdminOnly> só esconde o conteúdo renderizado, mas os hooks da página
+ * rodam antes disso — sem essa checagem, o CORRETOR chegaria a chamar
+ * GET /corretores e a ver o botão piscar no Header antes do redirect.
+ */
 export default function CorretoresPage() {
-  const { data: corretores, loading, error, reload } = useAsyncList(
-    corretorService.list,
+  const { user } = useAuth();
+  const isAdmin = user?.perfil === "ADMIN";
+
+  const fetchCorretores = useCallback(
+    () => (isAdmin ? corretorService.list() : Promise.resolve<Corretor[]>([])),
+    [isAdmin],
   );
+  const { data: corretores, loading, error, reload } =
+    useAsyncList(fetchCorretores);
   const [formOpen, setFormOpen] = useState(false);
 
-  usePageAction({
-    label: "Cadastrar corretor",
-    onClick: () => setFormOpen(true),
-  });
+  usePageAction(
+    isAdmin
+      ? { label: "Cadastrar corretor", onClick: () => setFormOpen(true) }
+      : null,
+  );
 
   return (
-    <>
+    <AdminOnly>
       <PageHeader
         title="Corretores"
         subtitle="Equipe da imobiliária"
@@ -133,6 +153,6 @@ export default function CorretoresPage() {
           reload();
         }}
       />
-    </>
+    </AdminOnly>
   );
 }

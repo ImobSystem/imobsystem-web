@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/services/errors";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LogoMark } from "@/components/layout/LogoMark";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { compose, email as emailRule, required } from "@/lib/validators";
 
@@ -67,8 +68,11 @@ export default function LoginPage() {
       </div>
 
       <div className="h-fit w-full max-w-[400px]">
-        {/* Marca — só texto, sem ícone/placeholder */}
-        <div className="mb-8 text-center">
+        {/* Marca */}
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-subtle text-accent">
+            <LogoMark className="h-7 w-7" />
+          </div>
           <h1 className="text-[28px] font-bold tracking-tight text-foreground">
             ImobSystem
           </h1>

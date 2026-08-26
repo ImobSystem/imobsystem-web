@@ -11,6 +11,8 @@ interface NavItem {
   href: string;
   label: string;
   icon: ReactNode;
+  /** Restrito ao ADMIN — some da sidebar do CORRETOR. */
+  adminOnly?: boolean;
 }
 
 /* Ícones inline (sem dependências externas), 20px conforme o redesign. */
@@ -65,6 +67,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: "/corretores",
     label: "Corretores",
+    adminOnly: true,
     icon: icon(
       <>
         <circle cx="9" cy="7" r="4" />
@@ -101,6 +104,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
   {
     href: "/configuracoes",
     label: "Configurações",
+    adminOnly: true,
     icon: icon(
       <>
         <circle cx="12" cy="12" r="3" />
@@ -151,9 +155,12 @@ export function Sidebar({ mobileOpen, onMobileClose }: Props) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
-  // Configurações é exclusiva do ADMIN — o CORRETOR nem vê o item no menu.
-  const navItems =
-    user?.perfil === "ADMIN" ? [...NAV_ITEMS, ...ADMIN_NAV_ITEMS] : NAV_ITEMS;
+  // Corretores e Configurações são exclusivos do ADMIN — o CORRETOR nem vê
+  // os itens no menu (a proteção real das rotas é o <AdminOnly> na página).
+  const isAdmin = user?.perfil === "ADMIN";
+  const navItems = [...NAV_ITEMS, ...ADMIN_NAV_ITEMS].filter(
+    (item) => !item.adminOnly || isAdmin,
+  );
 
   return (
     <>

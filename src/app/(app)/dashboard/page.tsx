@@ -21,6 +21,7 @@ import {
   STATUS_NEGOCIO_LABELS,
   type Captacao,
   type Cliente,
+  type Corretor,
   type Imovel,
   type Negociacao,
 } from "@/types";
@@ -43,10 +44,21 @@ const EMPTY: DashboardData = {
   corretoresTotal: null,
 };
 
-/** Ícone dentro do quadrado dos cards pequenos. */
-function MiniIcon({ children }: { children: ReactNode }) {
+/** Ícone dentro do quadrado dos cards pequenos. `accent` destaca em laranja. */
+function MiniIcon({
+  children,
+  accent = false,
+}: {
+  children: ReactNode;
+  accent?: boolean;
+}) {
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-elevated text-faint">
+    <span
+      className={
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] " +
+        (accent ? "bg-accent-subtle text-accent" : "bg-elevated text-faint")
+      }
+    >
       {children}
     </span>
   );
@@ -65,6 +77,7 @@ const ICON_PROPS = {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const isAdmin = user?.perfil === "ADMIN";
   const [data, setData] = useState<DashboardData>(EMPTY);
   const [loading, setLoading] = useState(true);
   // Seções que falharam ao carregar (ex.: ["Corretores"]).
@@ -82,12 +95,14 @@ export default function DashboardPage() {
     setWarnings([]);
     setFatalError(null);
 
+    // GET /corretores é exclusivo do ADMIN — o CORRETOR nem tenta (evitaria
+    // um 403 disfarçado de "falha ao carregar").
     // allSettled (e não all): buscamos tudo em paralelo, mas o fracasso de um
     // endpoint não cancela os outros — aproveitamos o que deu certo.
     const [imoveisR, corretoresR, clientesR, negociacoesR] =
       await Promise.allSettled([
         imovelService.list(),
-        corretorService.list(),
+        isAdmin ? corretorService.list() : Promise.resolve<Corretor[]>([]),
         clienteService.list(),
         negociacaoService.list(),
       ]);
@@ -98,7 +113,7 @@ export default function DashboardPage() {
       falhas.push("Imóveis");
       ultimaMsg = getErrorMessage(imoveisR.reason);
     }
-    if (corretoresR.status === "rejected") {
+    if (isAdmin && corretoresR.status === "rejected") {
       falhas.push("Corretores");
       ultimaMsg = getErrorMessage(corretoresR.reason);
     }
@@ -112,7 +127,8 @@ export default function DashboardPage() {
     }
 
     // Todos falharam → provavelmente rede/servidor fora: erro de tela cheia.
-    if (falhas.length === 4) {
+    // (O CORRETOR não busca Corretores, então sua "fonte total" é 3, não 4.)
+    if (falhas.length === (isAdmin ? 4 : 3)) {
       setFatalError(ultimaMsg);
       setLoading(false);
       return;
@@ -124,11 +140,13 @@ export default function DashboardPage() {
       negociacoes:
         negociacoesR.status === "fulfilled" ? negociacoesR.value : null,
       corretoresTotal:
-        corretoresR.status === "fulfilled" ? corretoresR.value.length : null,
+        isAdmin && corretoresR.status === "fulfilled"
+          ? corretoresR.value.length
+          : null,
     });
     setWarnings(falhas);
     setLoading(false);
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     load();
@@ -148,15 +166,15 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (user?.perfil === "ADMIN") {
+    if (isAdmin) {
       loadCaptacoes();
     }
-  }, [user, loadCaptacoes]);
+  }, [isAdmin, loadCaptacoes]);
 
   if (fatalError) {
     return (
       <>
-        <PageTitle />
+        <PageTitle isAdmin={isAdmin} />
         <Card>
           <ErrorState message={fatalError} onRetry={load} />
         </Card>
@@ -188,7 +206,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageTitle />
+      <PageTitle isAdmin={isAdmin} />
 
       {/* Aviso de falha parcial (algumas seções não carregaram) */}
       {!loading && warnings.length > 0 && (
@@ -206,7 +224,7 @@ export default function DashboardPage() {
         {/* Card grande — a métrica mais importante do negócio. */}
         <Card className="p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.06em] text-faint">
-            Negociações ativas
+            {isAdmin ? "Negociações ativas" : "Minhas negociações ativas"}
           </p>
           {loading ? (
             <div className="mt-2 h-12 w-20 animate-pulse rounded bg-elevated" />
@@ -238,7 +256,7 @@ export default function DashboardPage() {
         {/* 3 cards pequenos, empilhados. */}
         <div className="grid grid-cols-1 gap-4 lg:gap-6">
           <MiniStat
-            label="Imóveis"
+            label={isAdmin ? "Imóveis" : "Meus imóveis"}
             value={cardValue(data.imoveis?.length ?? null)}
             loading={loading}
             icon={
@@ -249,21 +267,38 @@ export default function DashboardPage() {
               </svg>
             }
           />
+          {isAdmin ? (
+            <MiniStat
+              label="Corretores"
+              value={cardValue(data.corretoresTotal)}
+              loading={loading}
+              icon={
+                <svg {...ICON_PROPS}>
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M2 21v-2a6 6 0 0 1 12 0v2" />
+                  <path d="M16 3.1a4 4 0 0 1 0 7.8" />
+                  <path d="M22 21v-2a6 6 0 0 0-4-5.6" />
+                </svg>
+              }
+            />
+          ) : (
+            // Destaque pessoal: "captações" do corretor = imóveis dele, que o
+            // backend já filtra — mesma contagem do card "Meus imóveis" acima.
+            <MiniStat
+              label="Minhas captações"
+              value={cardValue(data.imoveis?.length ?? null)}
+              loading={loading}
+              accent
+              icon={
+                <svg {...ICON_PROPS}>
+                  <path d="M4 22V4" />
+                  <path d="M4 4h14l-3 4 3 4H4" />
+                </svg>
+              }
+            />
+          )}
           <MiniStat
-            label="Corretores"
-            value={cardValue(data.corretoresTotal)}
-            loading={loading}
-            icon={
-              <svg {...ICON_PROPS}>
-                <circle cx="9" cy="7" r="4" />
-                <path d="M2 21v-2a6 6 0 0 1 12 0v2" />
-                <path d="M16 3.1a4 4 0 0 1 0 7.8" />
-                <path d="M22 21v-2a6 6 0 0 0-4-5.6" />
-              </svg>
-            }
-          />
-          <MiniStat
-            label="Clientes"
+            label={isAdmin ? "Clientes" : "Meus clientes"}
             value={cardValue(data.clientes?.length ?? null)}
             loading={loading}
             icon={
@@ -354,7 +389,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {user?.perfil === "ADMIN" && (
+      {isAdmin && (
         <CaptacoesChart
           data={captacoes}
           loading={captacoesLoading}
@@ -366,11 +401,13 @@ export default function DashboardPage() {
   );
 }
 
-function PageTitle() {
+function PageTitle({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className="mb-8">
       <h1 className="text-[28px] font-bold text-foreground">Dashboard</h1>
-      <p className="mt-1 text-sm text-faint">Visão geral da imobiliária</p>
+      <p className="mt-1 text-sm text-faint">
+        {isAdmin ? "Visão geral da imobiliária" : "Visão geral do seu trabalho"}
+      </p>
     </div>
   );
 }
@@ -380,11 +417,14 @@ function MiniStat({
   value,
   loading,
   icon,
+  accent = false,
 }: {
   label: string;
   value: number | string;
   loading: boolean;
   icon: ReactNode;
+  /** Destaca o ícone em laranja — usado no card pessoal "Minhas captações". */
+  accent?: boolean;
 }) {
   return (
     <Card className="flex items-center justify-between p-5">
@@ -400,7 +440,7 @@ function MiniStat({
           </p>
         )}
       </div>
-      <MiniIcon>{icon}</MiniIcon>
+      <MiniIcon accent={accent}>{icon}</MiniIcon>
     </Card>
   );
 }

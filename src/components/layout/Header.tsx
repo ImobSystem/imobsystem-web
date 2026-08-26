@@ -4,7 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageActionContext } from "@/contexts/PageActionContext";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { PERFIL_LABELS } from "@/types";
+
+/** Mesmo mapeamento perfil->tom usado na tabela de Corretores. */
+const PERFIL_TONE: Record<"ADMIN" | "CORRETOR", BadgeTone> = {
+  ADMIN: "violet",
+  CORRETOR: "blue",
+};
 
 /** Rótulo do breadcrumb por rota — só o nível atual, sem repetir o título da página. */
 const ROUTE_LABELS: Record<string, string> = {
@@ -81,6 +88,13 @@ export function Header({ onMenuClick }: Props) {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Badge de perfil — visível de cara, sem precisar abrir o menu. */}
+        {user?.perfil && (
+          <Badge tone={PERFIL_TONE[user.perfil]} className="hidden sm:inline-flex">
+            {PERFIL_LABELS[user.perfil]}
+          </Badge>
+        )}
+
         {action && (
           <button
             type="button"
@@ -112,7 +126,9 @@ export function Header({ onMenuClick }: Props) {
                   {user?.email}
                 </p>
                 {user?.perfil && (
-                  <p className="text-xs text-faint">{PERFIL_LABELS[user.perfil]}</p>
+                  <Badge tone={PERFIL_TONE[user.perfil]} className="mt-1.5">
+                    {PERFIL_LABELS[user.perfil]}
+                  </Badge>
                 )}
               </div>
               <div className="my-1 h-px bg-border" />
