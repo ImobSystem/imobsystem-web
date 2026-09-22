@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ImobSystem — Gestão Imobiliária",
+  title: "Kaza System — Gestão Imobiliária",
   description: "Sistema de gestão para imobiliárias.",
 };
 

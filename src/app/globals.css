@@ -18,7 +18,7 @@
  * A paleta é a MESMA da tela de login: grafite frio levemente esverdeado
  * (nunca preto puro) + o laranja da logo como única cor de destaque. Nada de
  * cor hardcoded nos componentes — tudo referencia estas variáveis, direto
- * (`bg-[var(--bg-base)]`) ou via os aliases Tailwind logo abaixo (`bg-base`,
+ * (`bg-[var(--bg-base)]`) ou via os aliases Tailwind logo abaixo (`bg-canvas`,
  * `text-muted-foreground`, `bg-accent-subtle`...).
  */
 :root {
@@ -121,7 +121,7 @@
  * `text-muted-foreground`, `border-border`, `bg-accent-subtle`).
  */
 @theme inline {
-  --color-base: var(--bg-base);
+  --color-canvas: var(--bg-base);
   --color-surface: var(--bg-surface);
   --color-elevated: var(--bg-elevated);
   --color-hover: var(--bg-hover);
@@ -284,4 +284,266 @@ body {
     var(--login-bg-soft) 0%,
     transparent 70%
   );
+}
+
+/*
+ * ============================================================
+ *  LANDING PAGE (rota "/") — vitrine publica, sempre escura
+ * ============================================================
+ * Mesma decisao da tela de login: a landing e uma peca de marca, nao uma
+ * tela do produto, entao NAO acompanha o tema claro/escuro. Aponta para a
+ * escala `--ink-*` (que `.light` nao sobrescreve), o que faz os vidros em
+ * rgba(255,255,255,...) valerem em qualquer tema.
+ */
+.landing {
+  --landing-vidro: rgba(255, 255, 255, 0.03);
+  --landing-vidro-forte: rgba(255, 255, 255, 0.05);
+  --landing-borda: rgba(255, 255, 255, 0.06);
+  --landing-borda-forte: rgba(255, 255, 255, 0.1);
+  /* Laranja da marca (--ink-accent, #ee5f12) em rgba, para sombras/brilhos. */
+  --landing-brilho: rgba(238, 95, 18, 0.3);
+  --landing-brilho-forte: rgba(238, 95, 18, 0.45);
+
+  background-color: var(--ink-base);
+  color: var(--ink-text);
+}
+
+/* Superficie de vidro reutilizada por cards, navbar e botao secundario. */
+.landing-vidro {
+  background-color: var(--landing-vidro);
+  border: 1px solid var(--landing-borda);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Texto com gradiente do accent ate o branco (headline e CTA). */
+.landing-gradiente {
+  background-image: linear-gradient(
+    100deg,
+    var(--ink-accent) 0%,
+    var(--ink-text) 70%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Clarao radial do accent atras do hero e da secao do Imo. */
+.landing-halo {
+  background: radial-gradient(
+    50% 50% at 50% 40%,
+    rgba(238, 95, 18, 0.08) 0%,
+    transparent 70%
+  );
+}
+
+/* ---------------------- Particulas do fundo ---------------------- */
+
+.landing-particula {
+  position: absolute;
+  border-radius: 9999px;
+  background-color: var(--ink-text);
+  animation: landing-flutuar-particula linear infinite;
+}
+
+@keyframes landing-flutuar-particula {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-28px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ------------------ Cards flutuantes do hero ------------------ */
+
+/*
+ * Dois niveis de propósito: o "slot" carrega o parallax do mouse (via
+ * variaveis que o JS escreve) e o filho carrega o vai-e-vem infinito. Se os
+ * dois transformassem o mesmo elemento, um sobrescreveria o outro.
+ */
+.landing-slot {
+  position: absolute;
+  transform: translate3d(var(--parallax-x, 0px), var(--parallax-y, 0px), 0);
+  transition: transform 0.35s ease-out;
+  will-change: transform;
+}
+
+.landing-float {
+  animation: landing-flutuar 7s ease-in-out infinite;
+}
+
+@keyframes landing-flutuar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* ------------------ Badge com borda girando ------------------ */
+
+/* A animacao de um angulo em custom property exige registra-la antes. */
+@property --landing-angulo {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.landing-badge {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--landing-vidro);
+}
+
+.landing-badge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--landing-angulo),
+    transparent 0deg,
+    var(--ink-accent) 50deg,
+    transparent 130deg,
+    transparent 360deg
+  );
+  /* Recorta o miolo: sobra so a moldura de 1px. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: landing-girar 4s linear infinite;
+}
+
+@keyframes landing-girar {
+  to {
+    --landing-angulo: 360deg;
+  }
+}
+
+/* ------------------ Entradas (load e scroll) ------------------ */
+
+.landing-sobe {
+  animation: landing-subir 0.6s ease-out backwards;
+}
+
+@keyframes landing-subir {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Revelado pelo Intersection Observer (useRevealOnScroll). */
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+
+.landing-reveal.animate-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ------------------ Chat demo do Imo (loop de 6s) ------------------ */
+
+.landing-chat-user {
+  animation: landing-chat-user 6s ease-in-out infinite;
+}
+
+.landing-chat-dots {
+  animation: landing-chat-dots 6s ease-in-out infinite;
+}
+
+.landing-chat-imo {
+  animation: landing-chat-imo 6s ease-in-out infinite;
+}
+
+@keyframes landing-chat-user {
+  0%,
+  3% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  8%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes landing-chat-dots {
+  0%,
+  24% {
+    opacity: 0;
+  }
+  27%,
+  40% {
+    opacity: 1;
+  }
+  43%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes landing-chat-imo {
+  0%,
+  41% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  47%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/*
+ * Acessibilidade: quem pediu menos movimento recebe a pagina inteira parada
+ * e ja revelada — nada de conteudo preso em opacity 0 esperando animacao.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .landing *,
+  .landing *::before,
+  .landing *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .landing-reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .landing-slot {
+    transform: none;
+  }
 }

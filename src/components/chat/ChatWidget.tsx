@@ -22,9 +22,9 @@ interface Mensagem {
 const BOAS_VINDAS: ReactNode = (
   <>
     Olá! Eu sou o{" "}
-    <strong className="font-semibold text-foreground">Imo</strong>, seu
-    assistente imobiliário. Posso cadastrar imóveis e clientes, responder
-    perguntas sobre seus dados e dar insights. Como posso ajudar?
+    <strong className="font-semibold text-foreground">Imo</strong>, o assistente
+    do Kaza System. Posso cadastrar imóveis e clientes, responder perguntas
+    sobre seus dados e dar insights. Como posso ajudar?
   </>
 );
 

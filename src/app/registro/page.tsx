@@ -128,7 +128,7 @@ export default function RegistroPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen justify-center bg-base px-4 pt-[15vh] pb-12 transition-colors">
+    <main className="relative flex min-h-screen justify-center bg-canvas px-4 pt-[15vh] pb-12 transition-colors">
       {/* Alternador de tema no canto */}
       <div className="absolute right-5 top-5">
         <ThemeToggle />
@@ -141,7 +141,7 @@ export default function RegistroPage() {
             <LogoMark className="h-7 w-7" />
           </div>
           <h1 className="text-[28px] font-bold tracking-tight text-foreground">
-            ImobSystem
+            Kaza System
           </h1>
           <p className="mt-1.5 text-sm text-faint">
             Crie a conta da sua imobiliária

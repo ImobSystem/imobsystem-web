@@ -23,7 +23,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute>
       <ImobiliariaProvider>
-        <div className="min-h-screen bg-base transition-colors">
+        <div className="min-h-screen bg-canvas transition-colors">
           <Sidebar
             mobileOpen={mobileNavOpen}
             onMobileClose={() => setMobileNavOpen(false)}

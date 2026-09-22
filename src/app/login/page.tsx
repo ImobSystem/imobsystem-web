@@ -11,7 +11,7 @@ import { getErrorMessage } from "@/services/errors";
  * E-mail usado nos links do rodapé (Suporte / Contato).
  * Trocar aqui quando o endereço oficial estiver definido.
  */
-const EMAIL_CONTATO = "contato@imobsystem.com.br";
+const EMAIL_CONTATO = "contato@kazasystem.com.br";
 
 /* Estilo comum dos campos — só muda o padding lateral (por causa dos ícones). */
 const CAMPO =
@@ -75,10 +75,10 @@ export default function LoginPage() {
       <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-12">
         {/* Marca */}
         <Image
-          src="/logo-imobsystem.png"
-          alt="ImobSystem — Gestão Imobiliária"
-          width={557}
-          height={151}
+          src="/logo-kazasystem.png"
+          alt="Kaza System — Gestão Imobiliária"
+          width={631}
+          height={240}
           loading="eager"
           fetchPriority="high"
           className="mb-8 h-auto w-[300px] max-w-[85%]"
@@ -209,7 +209,7 @@ export default function LoginPage() {
       <footer className="relative pb-6 text-center">
         <div className="flex items-center justify-center gap-6 text-xs text-[var(--login-muted)]">
           <a
-            href={`mailto:${EMAIL_CONTATO}?subject=Suporte%20ImobSystem`}
+            href={`mailto:${EMAIL_CONTATO}?subject=Suporte%20Kaza%20System`}
             className="inline-flex items-center gap-1.5 transition hover:text-[var(--login-text)]"
           >
             <IconeSuporte />
@@ -224,7 +224,7 @@ export default function LoginPage() {
           </a>
         </div>
         <p className="mt-3 text-[11px] text-[var(--login-muted)] opacity-70">
-          © {new Date().getFullYear()} ImobSystem. Todos os direitos reservados.
+          © {new Date().getFullYear()} Kaza System. Todos os direitos reservados.
         </p>
       </footer>
     </main>
