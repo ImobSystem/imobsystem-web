@@ -61,3 +61,70 @@ body {
   /* Suaviza a troca de tema. */
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/*
+ * ============================================================
+ *  TELA DE LOGIN — paleta propria, sempre escura
+ * ============================================================
+ * O login nao acompanha o tema claro/escuro do app: ele e uma "capa" fixa,
+ * com fundo escuro, o skyline em linhas e o laranja da logo como destaque.
+ * Por isso as cores vivem aqui, em variaveis escopadas em `.login-shell`,
+ * e nao na paleta `primary-*` (que continua sendo a identidade do sistema
+ * logado). Para ajustar a tela, mexa so nestes valores.
+ */
+.login-shell {
+  --login-bg: #121a1c; /* fundo da pagina */
+  --login-bg-soft: #202a2d; /* clarao no centro */
+  --login-card: #262e31; /* cartao do formulario */
+  --login-field: #1b2326; /* fundo dos campos */
+  --login-line: #3b4549; /* bordas */
+  --login-text: #e7ecee; /* texto principal */
+  --login-muted: #98a4a9; /* texto secundario / placeholders */
+  --login-accent: #ee5f12; /* laranja da marca */
+  --login-accent-soft: #f4761f; /* laranja do hover */
+  --login-ring: rgba(238, 95, 18, 0.35); /* anel de foco */
+
+  background-color: var(--login-bg);
+  color: var(--login-text);
+}
+
+/*
+ * Skyline: a mesma arte repetida no rodape e, girada 180deg, pendurada no
+ * topo — como no layout de referencia. A mascara apaga as linhas conforme
+ * elas se aproximam do centro, para nao competir com o cartao.
+ */
+.login-skyline {
+  background-image: url("/login-skyline.png");
+  background-repeat: repeat-x;
+  background-position: center bottom;
+  background-size: auto 48vh;
+  opacity: 0.16;
+}
+
+.login-skyline--bottom {
+  -webkit-mask-image: linear-gradient(to top, #000 8%, transparent 78%);
+  mask-image: linear-gradient(to top, #000 8%, transparent 78%);
+}
+
+/*
+ * A copia de cima e a mesma arte girada 180deg — os predios ficam pendurados
+ * no topo. Ela e mais fraca que a de baixo e sai 12px para fora da borda, de
+ * modo que a linha do chao (que viraria um risco no topo) fique cortada e os
+ * predios encostem na borda da tela.
+ */
+.login-skyline--top {
+  transform: rotate(180deg);
+  opacity: 0.1;
+  background-position: center calc(100% + 12px);
+  -webkit-mask-image: linear-gradient(to top, #000 6%, transparent 72%);
+  mask-image: linear-gradient(to top, #000 6%, transparent 72%);
+}
+
+/* Clarao suave atras do cartao, para destacar o centro da tela. */
+.login-glow {
+  background: radial-gradient(
+    60% 55% at 50% 45%,
+    var(--login-bg-soft) 0%,
+    transparent 70%
+  );
+}
