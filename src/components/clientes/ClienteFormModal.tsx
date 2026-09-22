@@ -7,6 +7,17 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { clienteService } from "@/services/clienteService";
 import { getErrorMessage } from "@/services/errors";
+import { useFormValidation, type ValidationRules } from "@/hooks/useFormValidation";
+import { maskCPF, maskTelefone } from "@/lib/masks";
+import {
+  compose,
+  cpfValido,
+  email as emailRule,
+  minLength,
+  required,
+  selectRequired,
+  telefoneValido,
+} from "@/lib/validators";
 import {
   TIPO_CLIENTE_LABELS,
   TIPO_CLIENTE_OPTIONS,
@@ -30,15 +41,27 @@ const emptyForm: ClienteInput = {
   tipoCliente: "COMPRADOR",
 };
 
+const rules: ValidationRules<ClienteInput> = {
+  nome: compose(required(), minLength(3)),
+  cpf: compose(required(), cpfValido()),
+  email: compose(required(), emailRule()),
+  telefone: compose(required(), telefoneValido()),
+  tipoCliente: selectRequired(),
+};
+
 export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
   const isEdit = Boolean(cliente);
   const [form, setForm] = useState<ClienteInput>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { getError, handleBlur, handleChange, validateAll, setFieldError, reset, isSubmitDisabled } =
+    useFormValidation<ClienteInput>(rules);
+
   useEffect(() => {
     if (!open) return;
     setError(null);
+    reset();
     if (cliente) {
       setForm({
         nome: cliente.nome,
@@ -52,8 +75,15 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
     }
   }, [open, cliente]);
 
+  function setField<K extends keyof ClienteInput>(key: K, value: ClienteInput[K]) {
+    const next = { ...form, [key]: value };
+    setForm(next);
+    handleChange(key, value, next);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!validateAll(form)) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -64,7 +94,14 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
       }
       onSaved();
     } catch (err) {
-      setError(getErrorMessage(err));
+      const message = getErrorMessage(err);
+      if (/cpf/i.test(message)) {
+        setFieldError("cpf", message);
+      } else if (/e-?mail/i.test(message)) {
+        setFieldError("email", message);
+      } else {
+        setError(message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -75,13 +112,35 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
       open={open}
       title={isEdit ? "Editar cliente" : "Cadastrar cliente"}
       onClose={onClose}
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="neutral"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="cliente-form"
+            loading={submitting}
+            disabled={isSubmitDisabled}
+          >
+            {isEdit ? "Salvar alterações" : "Cadastrar"}
+          </Button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form id="cliente-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           id="nome"
           label="Nome"
           value={form.nome}
-          onChange={(e) => setForm({ ...form, nome: e.target.value })}
+          onChange={(e) => setField("nome", e.target.value)}
+          onBlur={() => handleBlur("nome", form.nome, form)}
+          error={getError("nome")}
           required
           disabled={submitting}
         />
@@ -89,8 +148,11 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
           <Input
             id="cpf"
             label="CPF"
+            inputMode="numeric"
             value={form.cpf}
-            onChange={(e) => setForm({ ...form, cpf: e.target.value })}
+            onChange={(e) => setField("cpf", maskCPF(e.target.value))}
+            onBlur={() => handleBlur("cpf", form.cpf, form)}
+            error={getError("cpf")}
             placeholder="000.000.000-00"
             required
             disabled={submitting}
@@ -98,8 +160,11 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
           <Input
             id="telefone"
             label="Telefone"
+            inputMode="numeric"
             value={form.telefone}
-            onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+            onChange={(e) => setField("telefone", maskTelefone(e.target.value))}
+            onBlur={() => handleBlur("telefone", form.telefone, form)}
+            error={getError("telefone")}
             placeholder="(00) 00000-0000"
             required
             disabled={submitting}
@@ -110,7 +175,9 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
           label="E-mail"
           type="email"
           value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          onChange={(e) => setField("email", e.target.value)}
+          onBlur={() => handleBlur("email", form.email, form)}
+          error={getError("email")}
           required
           disabled={submitting}
         />
@@ -118,9 +185,9 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
           id="tipoCliente"
           label="Tipo de cliente"
           value={form.tipoCliente}
-          onChange={(e) =>
-            setForm({ ...form, tipoCliente: e.target.value as TipoCliente })
-          }
+          onChange={(e) => setField("tipoCliente", e.target.value as TipoCliente)}
+          onBlur={() => handleBlur("tipoCliente", form.tipoCliente, form)}
+          error={getError("tipoCliente")}
           options={TIPO_CLIENTE_OPTIONS.map((v) => ({
             value: v,
             label: TIPO_CLIENTE_LABELS[v],
@@ -131,25 +198,11 @@ export function ClienteFormModal({ open, cliente, onClose, onSaved }: Props) {
         {error && (
           <div
             role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+            className="rounded-lg border border-danger-bg bg-danger-bg px-3.5 py-2.5 text-sm text-danger"
           >
             {error}
           </div>
         )}
-
-        <div className="mt-2 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="rounded-lg px-4 py-2.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-60 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            Cancelar
-          </button>
-          <Button type="submit" loading={submitting}>
-            {isEdit ? "Salvar alterações" : "Cadastrar"}
-          </Button>
-        </div>
       </form>
     </Modal>
   );

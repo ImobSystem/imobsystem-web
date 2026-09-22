@@ -27,20 +27,23 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   return (
-    <Modal open={open} title={title} onClose={onCancel} maxWidthClass="max-w-md">
-      <p className="text-sm text-slate-600 dark:text-slate-300">{message}</p>
-      <div className="mt-6 flex justify-end gap-3">
-        <button
-          onClick={onCancel}
-          disabled={loading}
-          className="rounded-lg px-4 py-2.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-60 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          Cancelar
-        </button>
-        <Button variant="danger" onClick={onConfirm} loading={loading}>
-          {confirmLabel}
-        </Button>
-      </div>
+    <Modal
+      open={open}
+      title={title}
+      onClose={onCancel}
+      maxWidthClass="max-w-md"
+      footer={
+        <>
+          <Button variant="neutral" onClick={onCancel} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={onConfirm} loading={loading}>
+            {confirmLabel}
+          </Button>
+        </>
+      }
+    >
+      <p className="text-sm text-muted-foreground">{message}</p>
     </Modal>
   );
 }

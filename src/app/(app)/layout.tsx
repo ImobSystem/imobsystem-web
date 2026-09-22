@@ -1,33 +1,42 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ImobiliariaProvider } from "@/contexts/ImobiliariaContext";
+import { PageActionProvider } from "@/contexts/PageActionContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 
 /**
  * Layout compartilhado por toda a área logada (route group `(app)`).
  *
- * `(app)` é um route group: não aparece na URL, mas permite que todas as
- * telas internas (/dashboard, /imoveis, ...) herdem sidebar + header e a
- * proteção de autenticação de uma só vez.
+ * A sidebar agora é `position: fixed` (rail de 64px que expande sobre o
+ * conteúdo no hover) — por isso o wrapper do conteúdo não usa mais flexbox
+ * lado a lado, só um `margin-left` do tamanho do rail colapsado.
  *
- * O <ImobiliariaProvider> fica dentro do <ProtectedRoute> para que a busca dos
- * dados da imobiliária (logo, nome) aconteça uma única vez por sessão e só
- * depois de a sessão estar confirmada.
+ * `mobileNavOpen` mora aqui porque tanto o Header (botão hambúrguer) quanto
+ * a Sidebar (drawer) precisam dele.
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   return (
     <ProtectedRoute>
       <ImobiliariaProvider>
-        <div className="flex min-h-screen bg-background transition-colors">
-          <Sidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <Header />
-            <main className="flex-1 overflow-x-hidden px-6 py-8">
-              <div className="mx-auto max-w-6xl">{children}</div>
-            </main>
+        <PageActionProvider>
+          <div className="min-h-screen bg-base transition-colors">
+            <Sidebar
+              mobileOpen={mobileNavOpen}
+              onMobileClose={() => setMobileNavOpen(false)}
+            />
+            <div className="flex min-h-screen flex-col md:ml-16">
+              <Header onMenuClick={() => setMobileNavOpen(true)} />
+              <main className="flex-1 overflow-x-hidden px-4 py-8 sm:px-8">
+                <div className="mx-auto max-w-[1200px]">{children}</div>
+              </main>
+            </div>
           </div>
-        </div>
+        </PageActionProvider>
       </ImobiliariaProvider>
     </ProtectedRoute>
   );

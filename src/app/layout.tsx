@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -21,16 +17,19 @@ export const metadata: Metadata = {
 
 /*
  * Script anti-flash (FOUC): roda ANTES da primeira pintura e aplica a classe
- * `.dark` no <html> conforme a preferência salva (ou a do sistema). Sem isso,
- * a página apareceria clara por um instante antes do React hidratar o tema.
+ * `.light` no <html> conforme a preferência salva (ou a do sistema). O tema
+ * ESCURO é o padrão (valores direto em `:root`, sem precisar de classe) —
+ * só adicionamos `.light` quando a preferência resolvida for o tema claro.
+ * Sem isso, a página piscaria no tema errado por um instante antes do React
+ * hidratar.
  */
 const themeInitScript = `
 (function () {
   try {
     var saved = localStorage.getItem('imob:theme');
-    var dark = saved ? saved === 'dark'
-      : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (dark) document.documentElement.classList.add('dark');
+    var light = saved ? saved === 'light'
+      : !window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (light) document.documentElement.classList.add('light');
   } catch (e) {}
 })();
 `;
@@ -46,7 +45,7 @@ export default function RootLayout({
       // O script acima muda a classe no cliente antes da hidratação; isso evita
       // o aviso de mismatch de hidratação do Next.
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

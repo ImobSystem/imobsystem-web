@@ -1,5 +1,5 @@
 import api from "./api";
-import type { Corretor, CorretorInput } from "@/types";
+import type { Captacao, Corretor, CorretorInput } from "@/types";
 
 /**
  * Chamadas à API de Corretores.
@@ -14,6 +14,12 @@ export const corretorService = {
   create(payload: CorretorInput): Promise<Corretor> {
     return api
       .post<Corretor>("/corretores/cadastrar", payload)
+      .then((r) => r.data);
+  },
+  /** Captações por corretor — só ADMIN (backend valida). */
+  listarCaptacoes(): Promise<Captacao[]> {
+    return api
+      .get<Captacao[]>("/corretores/captacoes")
       .then((r) => r.data);
   },
 };

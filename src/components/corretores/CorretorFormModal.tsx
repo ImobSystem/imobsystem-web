@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { corretorService } from "@/services/corretorService";
 import { getErrorMessage } from "@/services/errors";
+import { useFormValidation, type ValidationRules } from "@/hooks/useFormValidation";
+import {
+  compose,
+  email as emailRule,
+  minLength,
+  required,
+  selectRequired,
+} from "@/lib/validators";
 import {
   PERFIL_LABELS,
   PERFIL_OPTIONS,
@@ -36,6 +44,14 @@ const emptyForm: FormState = {
   perfil: "CORRETOR",
 };
 
+const rules: ValidationRules<FormState> = {
+  nome: compose(required(), minLength(3)),
+  email: compose(required(), emailRule()),
+  senha: compose(required(), minLength(6)),
+  creci: required(),
+  perfil: selectRequired(),
+};
+
 /**
  * Cadastro de corretor. Diferente dos outros recursos, este endpoint ainda
  * exige `imobiliariaId` no corpo — preenchemos automaticamente com o do ADMIN
@@ -50,15 +66,26 @@ export function CorretorFormModal({ open, onClose, onSaved }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { getError, handleBlur, handleChange, validateAll, setFieldError, reset, isSubmitDisabled } =
+    useFormValidation<FormState>(rules);
+
   useEffect(() => {
     if (open) {
       setForm(emptyForm);
       setError(null);
+      reset();
     }
   }, [open]);
 
+  function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
+    const next = { ...form, [key]: value };
+    setForm(next);
+    handleChange(key, value, next);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!validateAll(form)) return;
     if (imobiliariaId === null) {
       setError(
         "Não foi possível identificar sua imobiliária no token. Refaça o login ou contate o suporte.",
@@ -71,20 +98,51 @@ export function CorretorFormModal({ open, onClose, onSaved }: Props) {
       await corretorService.create({ ...form, imobiliariaId });
       onSaved();
     } catch (err) {
-      setError(getErrorMessage(err));
+      const message = getErrorMessage(err);
+      if (/e-?mail/i.test(message)) {
+        setFieldError("email", message);
+      } else {
+        setError(message);
+      }
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Modal open={open} title="Cadastrar corretor" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <Modal
+      open={open}
+      title="Cadastrar corretor"
+      onClose={onClose}
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="neutral"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="corretor-form"
+            loading={submitting}
+            disabled={isSubmitDisabled}
+          >
+            Cadastrar
+          </Button>
+        </>
+      }
+    >
+      <form id="corretor-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           id="nome"
           label="Nome"
           value={form.nome}
-          onChange={(e) => setForm({ ...form, nome: e.target.value })}
+          onChange={(e) => setField("nome", e.target.value)}
+          onBlur={() => handleBlur("nome", form.nome, form)}
+          error={getError("nome")}
           required
           disabled={submitting}
         />
@@ -93,7 +151,9 @@ export function CorretorFormModal({ open, onClose, onSaved }: Props) {
           label="E-mail"
           type="email"
           value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          onChange={(e) => setField("email", e.target.value)}
+          onBlur={() => handleBlur("email", form.email, form)}
+          error={getError("email")}
           required
           disabled={submitting}
         />
@@ -103,7 +163,9 @@ export function CorretorFormModal({ open, onClose, onSaved }: Props) {
             label="Senha"
             type="password"
             value={form.senha}
-            onChange={(e) => setForm({ ...form, senha: e.target.value })}
+            onChange={(e) => setField("senha", e.target.value)}
+            onBlur={() => handleBlur("senha", form.senha, form)}
+            error={getError("senha")}
             autoComplete="new-password"
             required
             disabled={submitting}
@@ -112,7 +174,9 @@ export function CorretorFormModal({ open, onClose, onSaved }: Props) {
             id="creci"
             label="CRECI"
             value={form.creci}
-            onChange={(e) => setForm({ ...form, creci: e.target.value })}
+            onChange={(e) => setField("creci", e.target.value)}
+            onBlur={() => handleBlur("creci", form.creci, form)}
+            error={getError("creci")}
             required
             disabled={submitting}
           />
@@ -121,9 +185,9 @@ export function CorretorFormModal({ open, onClose, onSaved }: Props) {
           id="perfil"
           label="Perfil"
           value={form.perfil}
-          onChange={(e) =>
-            setForm({ ...form, perfil: e.target.value as Perfil })
-          }
+          onChange={(e) => setField("perfil", e.target.value as Perfil)}
+          onBlur={() => handleBlur("perfil", form.perfil, form)}
+          error={getError("perfil")}
           options={PERFIL_OPTIONS.map((v) => ({
             value: v,
             label: PERFIL_LABELS[v],
@@ -134,25 +198,11 @@ export function CorretorFormModal({ open, onClose, onSaved }: Props) {
         {error && (
           <div
             role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+            className="rounded-lg border border-danger-bg bg-danger-bg px-3.5 py-2.5 text-sm text-danger"
           >
             {error}
           </div>
         )}
-
-        <div className="mt-2 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="rounded-lg px-4 py-2.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-60 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            Cancelar
-          </button>
-          <Button type="submit" loading={submitting}>
-            Cadastrar
-          </Button>
-        </div>
       </form>
     </Modal>
   );

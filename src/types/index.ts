@@ -100,6 +100,8 @@ export interface Imovel {
   finalidade: Finalidade;
   statusImovel: StatusImovel;
   imobiliariaId: number;
+  /** URLs das fotos do imóvel (Cloudinary), na ordem cadastrada. */
+  fotos: string[];
 }
 
 /** Corpo de POST/PUT /imoveis (sem imobiliariaId/corretor — vêm do token). */
@@ -109,6 +111,23 @@ export interface ImovelInput {
   area_m2: number;
   finalidade: Finalidade;
   statusImovel: StatusImovel;
+}
+
+/** Filtros de GET /imoveis — todos opcionais; omitidos = sem filtro. */
+export interface ImovelFiltros {
+  endereco?: string;
+  status?: StatusImovel;
+  finalidade?: Finalidade;
+}
+
+/**
+ * Foto de um imóvel. A URL já aponta pro Cloudinary — o backend só guarda
+ * a referência (upload é feito direto do front pro Cloudinary).
+ */
+export interface FotoImovel {
+  id: number;
+  url: string;
+  imovelId: number;
 }
 
 /* ============================ Corretores ============================ */
@@ -132,6 +151,13 @@ export interface CorretorInput {
   imobiliariaId: number;
 }
 
+/** Total de imóveis captados por corretor (GET /corretores/captacoes, só ADMIN). */
+export interface Captacao {
+  corretorId: number;
+  nomeCorretor: string;
+  totalCaptacoes: number;
+}
+
 /* ============================ Clientes ============================ */
 
 export type TipoCliente = "COMPRADOR" | "LOCATARIO" | "PROPRIETARIO";
@@ -153,6 +179,13 @@ export interface ClienteInput {
   email: string;
   telefone: string;
   tipoCliente: TipoCliente;
+}
+
+/** Filtros de GET /clientes — todos opcionais; omitidos = sem filtro. */
+export interface ClienteFiltros {
+  nome?: string;
+  email?: string;
+  tipo?: TipoCliente;
 }
 
 /* ============================ Negociações ============================ */
@@ -188,6 +221,12 @@ export interface NegociacaoInput {
   valor: number;
   imovelId: number;
   clienteId: number;
+}
+
+/** Filtros de GET /negociacoes — todos opcionais; omitidos = sem filtro. */
+export interface NegociacaoFiltros {
+  status?: StatusNegocio;
+  finalidade?: Finalidade;
 }
 
 /* ============================ Metadados de enums ============================ *

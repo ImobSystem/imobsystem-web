@@ -10,30 +10,32 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options: Option[];
   /** Texto do placeholder desabilitado (ex.: "Selecione..."). */
   placeholder?: string;
+  /** Mensagem de erro do campo; quando presente, destaca a borda em vermelho. */
+  error?: string;
 }
 
 /** Campo <select> com o mesmo visual do Input. */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   function Select(
-    { label, id, options, placeholder, className = "", ...props },
+    { label, id, options, placeholder, error, className = "", ...props },
     ref,
   ) {
     return (
       <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor={id}
-          className="text-sm font-medium text-slate-700 dark:text-slate-300"
-        >
+        <label htmlFor={id} className="text-sm font-medium text-muted-foreground">
           {label}
         </label>
         <select
           ref={ref}
           id={id}
+          aria-invalid={error ? true : undefined}
           className={
-            "rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-slate-900 " +
-            "outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 " +
-            "disabled:cursor-not-allowed disabled:bg-slate-50 " +
-            "dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:disabled:bg-slate-800/30 dark:[color-scheme:dark] " +
+            "rounded-lg border bg-elevated px-3.5 py-2.5 text-sm text-muted-foreground " +
+            "outline-none transition-[border-color,box-shadow] duration-150 " +
+            "disabled:cursor-not-allowed disabled:opacity-60 " +
+            (error
+              ? "border-danger focus:border-danger focus:shadow-[0_0_0_3px_var(--status-danger-bg)] "
+              : "border-border focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-subtle)] ") +
             className
           }
           {...props}
@@ -49,6 +51,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             </option>
           ))}
         </select>
+        {error && (
+          <span className="animate-fade-in text-xs font-normal text-red-600 dark:text-red-400">
+            {error}
+          </span>
+        )}
       </div>
     );
   },
