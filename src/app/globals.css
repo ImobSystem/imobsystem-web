@@ -181,6 +181,44 @@ body {
   animation: scale-in 0.2s ease-out;
 }
 
+/* Entrada do painel do chat (ChatWidget): sobe do canto + fade. */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.18s ease-out;
+}
+
+/* Os tres pontinhos do "Imo esta digitando" — cada um com seu atraso. */
+@keyframes chat-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.chat-dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background-color: var(--text-muted);
+  animation: chat-dot 1.1s ease-in-out infinite;
+}
+
 /*
  * ============================================================
  *  TELA DE LOGIN — paleta propria, sempre escura

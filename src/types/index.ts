@@ -277,6 +277,24 @@ export const PERFIL_LABELS: Record<Perfil, string> = {
   CORRETOR: "Corretor",
 };
 
+/* ============================ Chat (Imo) ============================ */
+
+/** Ação que o assistente executou no backend durante a conversa. */
+export type ChatAcao = "IMOVEL_CRIADO" | "CLIENTE_CRIADO";
+
+/**
+ * Resposta de POST /chat.
+ *
+ * `dadosCriados` é o registro que o Imo acabou de criar. Vem com o formato
+ * do recurso correspondente (imóvel ou cliente), então aqui fica genérico
+ * de propósito — a UI só lê os campos que sabe rotular.
+ */
+export interface ChatResposta {
+  resposta: string;
+  acao: ChatAcao | null;
+  dadosCriados: Record<string, unknown> | null;
+}
+
 /** Ordem das colunas do funil (kanban) de negociações. */
 export const STATUS_NEGOCIO_OPTIONS: StatusNegocio[] = [
   "OPORTUNIDADE",

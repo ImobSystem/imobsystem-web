@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ImobiliariaProvider } from "@/contexts/ImobiliariaContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 /**
  * Layout compartilhado por toda a área logada (route group `(app)`).
@@ -27,6 +28,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             mobileOpen={mobileNavOpen}
             onMobileClose={() => setMobileNavOpen(false)}
           />
+
+          {/*
+           * O chat vem ANTES do conteúdo de propósito. Ele e os modais estão
+           * ambos em z-50, então quem decide a ordem de pintura é a posição
+           * no DOM — assim um modal aberto cobre o chat, e não o contrário.
+           */}
+          <ChatWidget />
+
           <div className="flex min-h-screen flex-col md:ml-[248px]">
             <Header onMenuClick={() => setMobileNavOpen(true)} />
             <main className="flex-1 overflow-x-hidden px-4 py-8 sm:px-8">
