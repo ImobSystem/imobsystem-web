@@ -15,34 +15,54 @@
  * ============================================================
  *  DESIGN TOKENS — a única fonte de verdade das cores do sistema.
  * ============================================================
- * "Ember in an obsidian void": canvas quase-preto com viés QUENTE (nunca
- * cinza/azul frio) + uma única cor de destaque (laranja ember). Nada de cor
- * hardcoded nos componentes — tudo referencia estas variáveis, direto
+ * A paleta é a MESMA da tela de login: grafite frio levemente esverdeado
+ * (nunca preto puro) + o laranja da logo como única cor de destaque. Nada de
+ * cor hardcoded nos componentes — tudo referencia estas variáveis, direto
  * (`bg-[var(--bg-base)]`) ou via os aliases Tailwind logo abaixo (`bg-base`,
  * `text-muted-foreground`, `bg-accent-subtle`...).
  */
 :root {
-  /* Superfícies — tom quente, nunca cinza frio */
-  --bg-base: #0f0d0a;
-  --bg-surface: #161412;
-  --bg-elevated: #1e1c18;
-  --bg-hover: #28261f;
+  /*
+   * Escala ESCURA canônica, amostrada do layout do login. Mora em vars
+   * `--ink-*` próprias porque a tela de login não acompanha o tema: ela
+   * precisa destes tons mesmo quando o app está no claro. O tema escuro
+   * (padrão) simplesmente aponta as superfícies para cá.
+   */
+  --ink-base: #121a1c; /* canvas — fundo da página de login */
+  --ink-surface: #1b2326; /* cards/tabelas — fundo dos campos do login */
+  --ink-elevated: #262e31; /* dropdowns, cabeçalho de tabela — cartão do login */
+  --ink-hover: #2f3a3d;
+  --ink-border: #2a3437; /* hairline */
+  --ink-border-strong: #3b4549; /* borda dos campos do login */
+  --ink-text: #e7ecee;
+  --ink-text-secondary: #b9c3c7;
+  --ink-text-muted: #98a4a9;
+  --ink-accent: #ee5f12; /* laranja da logo — o mesmo do botão "Entrar" */
+  --ink-accent-soft: #f4761f;
+  --ink-accent-ring: rgba(238, 95, 18, 0.35);
+
+  /* Superfícies — tom frio, levemente esverdeado, nunca preto */
+  --bg-base: var(--ink-base);
+  --bg-surface: var(--ink-surface);
+  --bg-elevated: var(--ink-elevated);
+  --bg-hover: var(--ink-hover);
 
   /* Bordas — hairline, quase invisíveis */
-  --border-primary: #2a2720;
-  --border-secondary: #3a3730;
+  --border-primary: var(--ink-border);
+  --border-secondary: var(--ink-border-strong);
 
   /* Texto */
-  --text-primary: #ffffff;
-  --text-secondary: #cccccc;
-  --text-muted: #777770;
+  --text-primary: var(--ink-text);
+  --text-secondary: var(--ink-text-secondary);
+  --text-muted: var(--ink-text-muted);
 
-  /* Accent — ember orange (UMA cor, UM propósito) */
-  --accent: #ff4700;
-  --accent-hover: #e03f00;
-  --accent-subtle: rgba(255, 71, 0, 0.1);
-  --accent-glow-inner: #451e0e;
-  --accent-glow-outer: #8b2e09;
+  /* Accent — o laranja da logo, o mesmo do botão "Entrar" (UMA cor, UM propósito) */
+  --accent: var(--ink-accent);
+  --accent-hover: var(--ink-accent-soft);
+  --accent-subtle: rgba(238, 95, 18, 0.12);
+  --accent-ring: var(--ink-accent-ring); /* anel de foco */
+  --accent-glow-inner: #47210c;
+  --accent-glow-outer: #8a3a0c;
 
   /* Status — só em badges, nunca em backgrounds grandes */
   --status-success: #22c55e;
@@ -57,24 +77,31 @@
   color-scheme: dark;
 }
 
+/*
+ * Tema claro: mesma família fria da escala `--ink-*` (cinza levemente
+ * esverdeado, nunca bege), com o laranja um tom mais fechado para manter
+ * contraste sobre branco. As vars `--ink-*` NÃO são sobrescritas aqui — é
+ * o que mantém a tela de login escura mesmo neste tema.
+ */
 .light {
-  --bg-base: #fafaf8;
+  --bg-base: #f3f5f6;
   --bg-surface: #ffffff;
-  --bg-elevated: #f5f4f0;
-  --bg-hover: #edece6;
+  --bg-elevated: #eceff0;
+  --bg-hover: #e3e8e9;
 
-  --border-primary: #e8e6e0;
-  --border-secondary: #d5d3cc;
+  --border-primary: #dee3e4;
+  --border-secondary: #c5cdcf;
 
-  --text-primary: #0f0d0a;
-  --text-secondary: #555550;
-  --text-muted: #999990;
+  --text-primary: #121a1c;
+  --text-secondary: #46545a;
+  --text-muted: #6f7f85;
 
-  --accent: #ff4700;
-  --accent-hover: #e03f00;
-  --accent-subtle: rgba(255, 71, 0, 0.07);
-  --accent-glow-inner: rgba(255, 71, 0, 0.15);
-  --accent-glow-outer: rgba(255, 71, 0, 0.1);
+  --accent: #dd5410;
+  --accent-hover: #c4480c;
+  --accent-subtle: rgba(221, 84, 16, 0.08);
+  --accent-ring: rgba(221, 84, 16, 0.3);
+  --accent-glow-inner: rgba(221, 84, 16, 0.15);
+  --accent-glow-outer: rgba(221, 84, 16, 0.1);
 
   --status-success: #16a34a;
   --status-success-bg: rgba(22, 163, 74, 0.08);
@@ -160,21 +187,21 @@ body {
  * ============================================================
  * O login nao acompanha o tema claro/escuro do app: ele e uma "capa" fixa,
  * com fundo escuro, o skyline em linhas e o laranja da logo como destaque.
- * Por isso as cores vivem aqui, em variaveis escopadas em `.login-shell`,
- * e nao na paleta `primary-*` (que continua sendo a identidade do sistema
- * logado). Para ajustar a tela, mexa so nestes valores.
+ * Por isso aponta para a escala `--ink-*` (que o tema claro nao sobrescreve)
+ * em vez de repetir os hexadecimais — os tokens do app saem da mesma escala,
+ * entao mudar a marca continua sendo um lugar so.
  */
 .login-shell {
-  --login-bg: #121a1c; /* fundo da pagina */
-  --login-bg-soft: #202a2d; /* clarao no centro */
-  --login-card: #262e31; /* cartao do formulario */
-  --login-field: #1b2326; /* fundo dos campos */
-  --login-line: #3b4549; /* bordas */
-  --login-text: #e7ecee; /* texto principal */
-  --login-muted: #98a4a9; /* texto secundario / placeholders */
-  --login-accent: #ee5f12; /* laranja da marca */
-  --login-accent-soft: #f4761f; /* laranja do hover */
-  --login-ring: rgba(238, 95, 18, 0.35); /* anel de foco */
+  --login-bg: var(--ink-base); /* fundo da pagina */
+  --login-bg-soft: #202a2d; /* clarao no centro — so existe aqui */
+  --login-card: var(--ink-elevated); /* cartao do formulario */
+  --login-field: var(--ink-surface); /* fundo dos campos */
+  --login-line: var(--ink-border-strong); /* bordas */
+  --login-text: var(--ink-text); /* texto principal */
+  --login-muted: var(--ink-text-muted); /* texto secundario / placeholders */
+  --login-accent: var(--ink-accent); /* laranja da marca */
+  --login-accent-soft: var(--ink-accent-soft); /* laranja do hover */
+  --login-ring: var(--ink-accent-ring); /* anel de foco */
 
   background-color: var(--login-bg);
   color: var(--login-text);

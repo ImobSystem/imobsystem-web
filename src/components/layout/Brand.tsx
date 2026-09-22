@@ -7,23 +7,22 @@ import { LogoMark } from "@/components/layout/LogoMark";
 const NOME_PADRAO = "ImobSystem";
 
 /**
- * Marca no topo da sidebar: avatar (logo da imobiliária ou o ícone do
+ * Identidade no topo da sidebar: avatar (logo da imobiliária ou o ícone do
  * ImobSystem, como marca padrão) + nome.
  *
- * Vive dentro do `group/sidebar` do <Sidebar>: o nome fica com opacidade 0
- * (e a coluna pai com `overflow-hidden`) até a sidebar expandir — no hover
- * (desktop) ou quando `mobileOpen` força o estado expandido (drawer).
+ * Não é um seletor: o usuário pertence a uma única imobiliária, então aqui
+ * não existe chevron nem menu — seria prometer uma troca que não existe.
  */
-export function Brand({ mobileOpen = false }: { mobileOpen?: boolean }) {
+export function Brand() {
   const { imobiliaria } = useImobiliaria();
 
   const logo = imobiliaria?.logoBase64 ?? null;
   const nome = imobiliaria?.nome ?? NOME_PADRAO;
 
   return (
-    <div className="flex w-full min-w-0 items-center gap-3">
+    <div className="flex w-full min-w-0 items-center gap-2.5 px-2">
       {logo ? (
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-white p-1">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white p-0.5">
           <img
             src={logo}
             alt={`Logo de ${nome}`}
@@ -32,16 +31,13 @@ export function Brand({ mobileOpen = false }: { mobileOpen?: boolean }) {
         </div>
       ) : (
         // Sem logo própria cadastrada: cai na marca do próprio ImobSystem.
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent-subtle text-accent">
-          <LogoMark className="h-5 w-5" />
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-subtle text-accent">
+          <LogoMark className="h-4 w-4" />
         </div>
       )}
 
       <span
-        className={
-          "truncate whitespace-nowrap text-sm font-semibold text-foreground opacity-0 transition-opacity duration-150 md:group-hover/sidebar:opacity-100 " +
-          (mobileOpen ? "opacity-100" : "")
-        }
+        className="truncate text-sm font-semibold text-foreground"
         title={nome}
       >
         {nome}

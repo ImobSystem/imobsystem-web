@@ -401,10 +401,14 @@ export default function DashboardPage() {
   );
 }
 
+/* Mesma tipografia do <PageHeader> das outras telas — aqui é local só
+ * porque o dashboard não tem abas nem ação principal. */
 function PageTitle({ isAdmin }: { isAdmin: boolean }) {
   return (
-    <div className="mb-8">
-      <h1 className="text-[28px] font-bold text-foreground">Dashboard</h1>
+    <div className="mb-6">
+      <h1 className="text-[26px] font-semibold tracking-tight text-foreground">
+        Dashboard
+      </h1>
       <p className="mt-1 text-sm text-faint">
         {isAdmin ? "Visão geral da imobiliária" : "Visão geral do seu trabalho"}
       </p>

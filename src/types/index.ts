@@ -158,6 +158,16 @@ export interface Captacao {
   totalCaptacoes: number;
 }
 
+/** Números do perfil de um corretor (GET /corretores/{id}/metricas, só ADMIN). */
+export interface CorretorMetricas {
+  corretorId: number;
+  nomeCorretor: string;
+  totalImoveis: number;
+  totalClientes: number;
+  totalNegociacoes: number;
+  negociacoesGanhas: number;
+}
+
 /* ============================ Clientes ============================ */
 
 export type TipoCliente = "COMPRADOR" | "LOCATARIO" | "PROPRIETARIO";

@@ -54,7 +54,7 @@ export function Button({
     <button
       disabled={disabled || loading}
       className={
-        "inline-flex items-center justify-center gap-2 rounded font-medium " +
+        "inline-flex items-center justify-center gap-2 rounded-lg font-medium " +
         "transition-all duration-200 " +
         "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base " +
         "active:scale-[0.98] " +

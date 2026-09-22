@@ -13,8 +13,11 @@ interface Props {
 }
 
 /**
- * Barra de busca + filtros reutilizável entre as telas de listagem.
- * Flex-wrap: empilha no mobile, os inputs ficam full-width.
+ * Barra de busca + filtros das listagens, no formato da referência: a busca
+ * ocupa toda a largura disponível e os selects ficam encostados à direita,
+ * todos com a mesma altura (40px).
+ *
+ * Flex-wrap: no mobile empilha e os campos viram full-width.
  */
 export function FilterBar({
   searchValue,
@@ -25,7 +28,7 @@ export function FilterBar({
   onClear,
 }: Props) {
   return (
-    <div className="mb-4 flex flex-wrap items-end gap-3">
+    <div className="mb-4 flex flex-wrap items-center gap-2">
       {onSearchChange && (
         <div className="relative min-w-[220px] flex-1">
           <svg
@@ -37,7 +40,7 @@ export function FilterBar({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-faint"
             aria-hidden
           >
             <circle cx="11" cy="11" r="8" />
@@ -48,7 +51,7 @@ export function FilterBar({
             value={searchValue ?? ""}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
-            className="w-full rounded-lg border border-border bg-elevated py-2 pl-9 pr-3 text-sm text-muted-foreground placeholder:text-faint outline-none transition-colors duration-150 focus:border-accent"
+            className="h-10 w-full rounded-lg border border-border bg-surface pl-10 pr-3 text-sm text-foreground placeholder:text-faint outline-none transition-colors duration-150 hover:border-border-strong focus:border-accent"
           />
         </div>
       )}
@@ -59,7 +62,7 @@ export function FilterBar({
         <button
           type="button"
           onClick={onClear}
-          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm text-faint transition-colors duration-150 hover:text-muted-foreground"
+          className="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm text-faint transition-colors duration-150 hover:bg-hover hover:text-foreground"
         >
           <svg
             width="14"

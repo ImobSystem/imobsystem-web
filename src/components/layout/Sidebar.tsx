@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Brand } from "@/components/layout/Brand";
+import { PERFIL_LABELS } from "@/types";
 
 interface NavItem {
   href: string;
@@ -15,15 +16,15 @@ interface NavItem {
   adminOnly?: boolean;
 }
 
-/* Ícones inline (sem dependências externas), 20px conforme o redesign. */
+/* Ícones inline (sem dependências externas), 18px — traço fino, como na referência. */
 const icon = (path: ReactNode) => (
   <svg
-    width="20"
-    height="20"
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.7"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
@@ -31,25 +32,16 @@ const icon = (path: ReactNode) => (
   </svg>
 );
 
-const SUN_ICON = icon(
-  <>
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-  </>,
-);
-
-const MOON_ICON = icon(<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />);
-
 const NAV_ITEMS: NavItem[] = [
   {
     href: "/dashboard",
     label: "Dashboard",
     icon: icon(
       <>
-        <rect x="3" y="3" width="7" height="9" />
-        <rect x="14" y="3" width="7" height="5" />
-        <rect x="14" y="12" width="7" height="9" />
-        <rect x="3" y="16" width="7" height="5" />
+        <rect x="3" y="3" width="7" height="9" rx="1" />
+        <rect x="14" y="3" width="7" height="5" rx="1" />
+        <rect x="14" y="12" width="7" height="9" rx="1" />
+        <rect x="3" y="16" width="7" height="5" rx="1" />
       </>,
     ),
   },
@@ -97,10 +89,6 @@ const NAV_ITEMS: NavItem[] = [
       </>,
     ),
   },
-];
-
-/** Itens restritos ao ADMIN (não aparecem para o CORRETOR). */
-const ADMIN_NAV_ITEMS: NavItem[] = [
   {
     href: "/configuracoes",
     label: "Configurações",
@@ -114,53 +102,60 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
   },
 ];
 
-/**
- * Classes compartilhadas por qualquer "item de rail" (nav link ou o toggle de
- * tema no rodapé): 40px colapsado, cresce pra preencher a largura quando a
- * sidebar expande (hover no desktop, ou `mobileOpen` força o drawer aberto).
- */
-function railItemClass(active: boolean, mobileOpen: boolean) {
-  return (
-    "group/item relative flex h-10 shrink-0 items-center gap-3 overflow-hidden rounded-[10px] px-[10px] " +
-    "transition-colors duration-150 " +
-    (mobileOpen ? "w-full" : "w-10 md:group-hover/sidebar:w-full") +
-    " " +
-    (active
-      ? "bg-accent-subtle text-accent"
-      : "text-faint hover:bg-hover hover:text-muted-foreground")
-  );
-}
+const SUN_ICON = icon(
+  <>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </>,
+);
 
-function railLabelClass(mobileOpen: boolean) {
-  return (
-    "whitespace-nowrap text-sm font-medium opacity-0 transition-opacity duration-150 md:group-hover/sidebar:opacity-100 " +
-    (mobileOpen ? "opacity-100" : "")
-  );
-}
-
-/** Tooltip do item — só existe no desktop, e só aparece no foco (o hover já expande a sidebar). */
-const TOOLTIP_CLASS =
-  "pointer-events-none absolute left-full top-1/2 z-50 ml-3 hidden -translate-y-1/2 whitespace-nowrap " +
-  "rounded-md border border-border bg-elevated px-2 py-1 text-xs font-medium text-muted-foreground shadow-lg " +
-  "opacity-0 transition-opacity duration-150 group-focus-within/item:opacity-100 md:block";
+const MOON_ICON = icon(<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />);
 
 interface Props {
   mobileOpen: boolean;
   onMobileClose: () => void;
 }
 
+/**
+ * Sidebar fixa de 248px (drawer no mobile), no formato da referência:
+ * identidade da imobiliária no topo, navegação com rótulo sempre visível e
+ * a conta do usuário ancorada no rodapé — é de lá que saem o tema e o logout.
+ */
 export function Sidebar({ mobileOpen, onMobileClose }: Props) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Corretores e Configurações são exclusivos do ADMIN — o CORRETOR nem vê
   // os itens no menu (a proteção real das rotas é o <AdminOnly> na página).
   const isAdmin = user?.perfil === "ADMIN";
-  const navItems = [...NAV_ITEMS, ...ADMIN_NAV_ITEMS].filter(
-    (item) => !item.adminOnly || isAdmin,
-  );
+  const navItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
+
+  // Fecha o menu da conta no clique fora ou no ESC.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointerDown(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  const initial = user?.email?.charAt(0).toUpperCase() ?? "?";
 
   return (
     <>
@@ -175,21 +170,18 @@ export function Sidebar({ mobileOpen, onMobileClose }: Props) {
 
       <aside
         className={
-          "group/sidebar fixed inset-y-0 left-0 z-40 flex w-16 flex-col border-r border-border bg-base " +
-          "transition-[width,background-color,box-shadow,transform] duration-200 ease-out " +
-          "md:translate-x-0 md:hover:w-60 md:hover:bg-surface md:hover:shadow-[4px_0_24px_rgba(0,0,0,0.3)] " +
-          (mobileOpen
-            ? "w-60 translate-x-0 bg-surface shadow-[4px_0_24px_rgba(0,0,0,0.3)]"
-            : "-translate-x-full")
+          "fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r border-border bg-base " +
+          "transition-transform duration-200 ease-out md:translate-x-0 " +
+          (mobileOpen ? "translate-x-0" : "-translate-x-full")
         }
       >
-        {/* Topo: marca */}
-        <div className="flex h-14 shrink-0 items-center overflow-hidden px-3">
-          <Brand mobileOpen={mobileOpen} />
+        {/* Topo: identidade da imobiliária */}
+        <div className="flex h-14 shrink-0 items-center px-3">
+          <Brand />
         </div>
 
         {/* Navegação */}
-        <nav className="flex flex-1 flex-col gap-1 px-3 py-2">
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-2">
           {navItems.map((item) => {
             // Ativo quando a rota atual é o item ou uma subrota dele.
             const active =
@@ -199,36 +191,105 @@ export function Sidebar({ mobileOpen, onMobileClose }: Props) {
                 key={item.href}
                 href={item.href}
                 onClick={onMobileClose}
-                className={railItemClass(active, mobileOpen)}
+                aria-current={active ? "page" : undefined}
+                className={
+                  "flex h-9 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors duration-150 " +
+                  (active
+                    ? "bg-hover font-medium text-foreground"
+                    : "text-muted-foreground hover:bg-hover/60 hover:text-foreground")
+                }
               >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                <span
+                  className={
+                    "flex h-[18px] w-[18px] shrink-0 items-center justify-center " +
+                    (active ? "text-accent" : "text-faint")
+                  }
+                >
                   {item.icon}
                 </span>
-                <span className={railLabelClass(mobileOpen)}>{item.label}</span>
-                <span className={TOOLTIP_CLASS}>{item.label}</span>
+                {item.label}
               </Link>
             );
           })}
         </nav>
 
-        {/* Rodapé: toggle de tema */}
-        <div className="shrink-0 px-3 pb-3">
+        {/* Rodapé: conta do usuário (tema e logout saem daqui) */}
+        <div className="relative shrink-0 border-t border-border p-3" ref={menuRef}>
           <button
             type="button"
-            onClick={toggleTheme}
-            aria-label={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
-            className={railItemClass(false, mobileOpen)}
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            aria-label="Menu da conta"
+            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors duration-150 hover:bg-hover"
           >
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center">
-              {isDark ? MOON_ICON : SUN_ICON}
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent">
+              {initial}
             </span>
-            <span className={railLabelClass(mobileOpen)}>
-              {isDark ? "Modo claro" : "Modo escuro"}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-medium text-foreground">
+                {user?.email ?? "Conta"}
+              </span>
+              {user?.perfil && (
+                <span className="block text-[11px] text-faint">
+                  {PERFIL_LABELS[user.perfil]}
+                </span>
+              )}
             </span>
-            <span className={TOOLTIP_CLASS}>
-              {isDark ? "Modo claro" : "Modo escuro"}
-            </span>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0 text-faint"
+              aria-hidden
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
           </button>
+
+          {menuOpen && (
+            <div
+              role="menu"
+              className="animate-scale-in absolute bottom-[calc(100%-4px)] left-3 right-3 rounded-xl border border-border bg-elevated p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  toggleTheme();
+                  setMenuOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors duration-150 hover:bg-hover hover:text-foreground"
+              >
+                <span className="text-faint">{isDark ? SUN_ICON : MOON_ICON}</span>
+                {isDark ? "Modo claro" : "Modo escuro"}
+              </button>
+              <div className="my-1 h-px bg-border" />
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  logout();
+                  router.replace("/login");
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors duration-150 hover:bg-hover hover:text-danger"
+              >
+                <span className="text-faint">
+                  {icon(
+                    <>
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <path d="m16 17 5-5-5-5M21 12H9" />
+                    </>,
+                  )}
+                </span>
+                Sair
+              </button>
+            </div>
+          )}
         </div>
       </aside>
     </>

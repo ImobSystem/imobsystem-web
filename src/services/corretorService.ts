@@ -1,5 +1,12 @@
 import api from "./api";
-import type { Captacao, Corretor, CorretorInput } from "@/types";
+import type {
+  Captacao,
+  Cliente,
+  Corretor,
+  CorretorInput,
+  CorretorMetricas,
+  Imovel,
+} from "@/types";
 
 /**
  * Chamadas à API de Corretores.
@@ -21,5 +28,28 @@ export const corretorService = {
     return api
       .get<Captacao[]>("/corretores/captacoes")
       .then((r) => r.data);
+  },
+
+  /*
+   * Perfil de um corretor — as quatro chamadas da tela /corretores/{id}.
+   * Todas são restritas ao ADMIN; o backend recusa os demais perfis.
+   */
+
+  buscarPorId(id: number): Promise<Corretor> {
+    return api.get<Corretor>(`/corretores/${id}`).then((r) => r.data);
+  },
+
+  buscarMetricas(id: number): Promise<CorretorMetricas> {
+    return api
+      .get<CorretorMetricas>(`/corretores/${id}/metricas`)
+      .then((r) => r.data);
+  },
+
+  listarImoveisDoCorretor(id: number): Promise<Imovel[]> {
+    return api.get<Imovel[]>(`/corretores/${id}/imoveis`).then((r) => r.data);
+  },
+
+  listarClientesDoCorretor(id: number): Promise<Cliente[]> {
+    return api.get<Cliente[]>(`/corretores/${id}/clientes`).then((r) => r.data);
   },
 };

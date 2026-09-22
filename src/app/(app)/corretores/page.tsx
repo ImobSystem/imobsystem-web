@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { TableCard, TableFooter, TH_CLASS, TD_CLASS } from "@/components/ui/Table";
 import {
   EmptyState,
   ErrorState,
@@ -13,10 +15,14 @@ import {
 import { CorretorFormModal } from "@/components/corretores/CorretorFormModal";
 import { AdminOnly } from "@/components/AdminOnly";
 import { useAsyncList } from "@/hooks/useAsyncList";
-import { usePageAction } from "@/contexts/PageActionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { corretorService } from "@/services/corretorService";
 import { PERFIL_LABELS, type Corretor } from "@/types";
+
+/** Nome do corretor: leva ao perfil dele. Sublinha só no hover. */
+const NOME_LINK =
+  "font-medium text-foreground no-underline transition-colors duration-150 " +
+  "hover:text-accent hover:underline";
 
 /**
  * Gestão da equipe — exclusiva do ADMIN. O item nem aparece no menu do
@@ -41,17 +47,11 @@ export default function CorretoresPage() {
     useAsyncList(fetchCorretores);
   const [formOpen, setFormOpen] = useState(false);
 
-  usePageAction(
-    isAdmin
-      ? { label: "Cadastrar corretor", onClick: () => setFormOpen(true) }
-      : null,
-  );
 
   return (
     <AdminOnly>
       <PageHeader
         title="Corretores"
-        subtitle="Equipe da imobiliária"
         action={
           <Button size="sm" onClick={() => setFormOpen(true)}>Cadastrar corretor</Button>
         }
@@ -80,15 +80,15 @@ export default function CorretoresPage() {
       ) : (
         <>
           {/* Desktop: tabela */}
-          <Card className="hidden overflow-hidden md:block">
-            <div className="overflow-x-auto">
+          <div className="hidden md:block">
+            <TableCard>
               <table className="w-full text-left">
-                <thead className="border-b border-border bg-elevated text-[11px] font-semibold uppercase tracking-wider text-faint">
+                <thead className="border-b border-border bg-elevated">
                   <tr>
-                    <th className="px-4 py-3">Nome</th>
-                    <th className="px-4 py-3">E-mail</th>
-                    <th className="px-4 py-3">CRECI</th>
-                    <th className="px-4 py-3">Perfil</th>
+                    <th className={TH_CLASS}>Nome</th>
+                    <th className={TH_CLASS}>E-mail</th>
+                    <th className={TH_CLASS}>CRECI</th>
+                    <th className={TH_CLASS}>Perfil</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -97,16 +97,18 @@ export default function CorretoresPage() {
                       key={c.id}
                       className="transition-colors duration-150 hover:bg-hover"
                     >
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
-                        {c.nome}
+                      <td className={TD_CLASS}>
+                        <Link href={`/corretores/${c.id}`} className={NOME_LINK}>
+                          {c.nome}
+                        </Link>
                       </td>
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                      <td className={TD_CLASS}>
                         {c.email}
                       </td>
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                      <td className={TD_CLASS}>
                         {c.creci}
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className={TD_CLASS}>
                         <Badge tone={c.perfil === "ADMIN" ? "violet" : "blue"}>
                           {PERFIL_LABELS[c.perfil]}
                         </Badge>
@@ -115,8 +117,9 @@ export default function CorretoresPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </Card>
+            </TableCard>
+            <TableFooter count={corretores.length} singular="corretor" plural="corretores" />
+          </div>
 
           {/* Mobile: cards empilhados */}
           <div className="flex flex-col gap-2 md:hidden">
@@ -126,9 +129,12 @@ export default function CorretoresPage() {
                 className="rounded-xl border border-border bg-surface p-4"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="truncate text-sm font-medium text-foreground">
+                  <Link
+                    href={`/corretores/${c.id}`}
+                    className={`truncate text-sm font-medium ${NOME_LINK}`}
+                  >
                     {c.nome}
-                  </p>
+                  </Link>
                   <Badge tone={c.perfil === "ADMIN" ? "violet" : "blue"}>
                     {PERFIL_LABELS[c.perfil]}
                   </Badge>

@@ -7,7 +7,9 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { IconAction } from "@/components/ui/IconAction";
 import { FilterBar } from "@/components/ui/FilterBar";
+import { TableCard, TableFooter, TH_CLASS, TD_CLASS } from "@/components/ui/Table";
 import { FilterSelect } from "@/components/ui/FilterSelect";
+import { Tabs } from "@/components/ui/Tabs";
 import {
   EmptyState,
   ErrorState,
@@ -17,7 +19,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImovelFormModal } from "@/components/imoveis/ImovelFormModal";
 import { useAsyncList } from "@/hooks/useAsyncList";
 import { useDebounce } from "@/hooks/useDebounce";
-import { usePageAction } from "@/contexts/PageActionContext";
 import { imovelService } from "@/services/imovelService";
 import { getErrorMessage } from "@/services/errors";
 import { STATUS_IMOVEL_TONE } from "@/lib/format";
@@ -115,7 +116,6 @@ export default function ImoveisPage() {
     setFormOpen(true);
   }
 
-  usePageAction({ label: "Cadastrar imóvel", onClick: openCreate });
 
   async function confirmDelete() {
     if (!toDelete) return;
@@ -136,7 +136,20 @@ export default function ImoveisPage() {
     <>
       <PageHeader
         title="Imóveis"
-        subtitle="Gerencie os imóveis da imobiliária"
+        tabs={
+          <Tabs
+            label="Filtrar por status"
+            value={status}
+            onChange={(v) => setStatus(v as StatusImovel | "")}
+            options={[
+              { value: "" as StatusImovel | "", label: "Todos" },
+              ...STATUS_IMOVEL_OPTIONS.map((s) => ({
+                value: s as StatusImovel | "",
+                label: STATUS_IMOVEL_LABELS[s],
+              })),
+            ]}
+          />
+        }
         action={<Button size="sm" onClick={openCreate}>Cadastrar imóvel</Button>}
       />
 
@@ -148,16 +161,6 @@ export default function ImoveisPage() {
         onClear={clearFilters}
       >
         <FilterSelect
-          label="Status"
-          value={status}
-          onChange={(v) => setStatus(v as StatusImovel | "")}
-          options={STATUS_IMOVEL_OPTIONS.map((s) => ({
-            value: s,
-            label: STATUS_IMOVEL_LABELS[s],
-          }))}
-          className="w-40"
-        />
-        <FilterSelect
           label="Finalidade"
           value={finalidade}
           onChange={(v) => setFinalidade(v as Finalidade | "")}
@@ -165,7 +168,8 @@ export default function ImoveisPage() {
             value: f,
             label: FINALIDADE_LABELS[f],
           }))}
-          className="w-40"
+          allLabel="Todas as finalidades"
+          className="w-[200px]"
         />
       </FilterBar>
 
@@ -209,17 +213,17 @@ export default function ImoveisPage() {
       ) : (
         <>
           {/* Desktop: tabela */}
-          <Card className="hidden overflow-hidden md:block">
-            <div className="overflow-x-auto">
+          <div className="hidden md:block">
+            <TableCard>
               <table className="w-full text-left">
-                <thead className="border-b border-border bg-elevated text-[11px] font-semibold uppercase tracking-wider text-faint">
+                <thead className="border-b border-border bg-elevated">
                   <tr>
-                    <th className="px-4 py-3">Foto</th>
-                    <th className="px-4 py-3">Endereço</th>
-                    <th className="px-4 py-3">Área</th>
-                    <th className="px-4 py-3">Finalidade</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Ações</th>
+                    <th className={TH_CLASS}>Foto</th>
+                    <th className={TH_CLASS}>Endereço</th>
+                    <th className={TH_CLASS}>Área</th>
+                    <th className={TH_CLASS}>Finalidade</th>
+                    <th className={TH_CLASS}>Status</th>
+                    <th className={`${TH_CLASS} text-right`}>Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -228,27 +232,27 @@ export default function ImoveisPage() {
                       key={imovel.id}
                       className="transition-colors duration-150 hover:bg-hover"
                     >
-                      <td className="px-4 py-3.5">
+                      <td className={TD_CLASS}>
                         <FotoThumb imovel={imovel} />
                       </td>
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                      <td className={TD_CLASS}>
                         {imovel.endereco}
                         <span className="block text-[13px] text-faint">
                           {imovel.CEP}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                      <td className={TD_CLASS}>
                         {imovel.area_m2} m²
                       </td>
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                      <td className={TD_CLASS}>
                         {FINALIDADE_LABELS[imovel.finalidade]}
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className={TD_CLASS}>
                         <Badge tone={STATUS_IMOVEL_TONE[imovel.statusImovel]}>
                           {STATUS_IMOVEL_LABELS[imovel.statusImovel]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className={TD_CLASS}>
                         <div className="flex items-center justify-end gap-1">
                           <IconAction
                             label="Editar"
@@ -270,8 +274,9 @@ export default function ImoveisPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </Card>
+            </TableCard>
+            <TableFooter count={imoveis.length} singular="imóvel" plural="imóveis" />
+          </div>
 
           {/* Mobile: cards empilhados */}
           <div className="flex flex-col gap-2 md:hidden">

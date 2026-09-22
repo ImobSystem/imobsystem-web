@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { IconAction } from "@/components/ui/IconAction";
 import { FilterBar } from "@/components/ui/FilterBar";
-import { FilterSelect } from "@/components/ui/FilterSelect";
+import { Tabs } from "@/components/ui/Tabs";
+import { TableCard, TableFooter, TH_CLASS, TD_CLASS } from "@/components/ui/Table";
 import {
   EmptyState,
   ErrorState,
@@ -17,7 +18,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ClienteFormModal } from "@/components/clientes/ClienteFormModal";
 import { useAsyncList } from "@/hooks/useAsyncList";
 import { useDebounce } from "@/hooks/useDebounce";
-import { usePageAction } from "@/contexts/PageActionContext";
 import { clienteService } from "@/services/clienteService";
 import { getErrorMessage } from "@/services/errors";
 import { TIPO_CLIENTE_TONE } from "@/lib/format";
@@ -83,7 +83,6 @@ export default function ClientesPage() {
     setFormOpen(true);
   }
 
-  usePageAction({ label: "Cadastrar cliente", onClick: openCreate });
 
   async function confirmDelete() {
     if (!toDelete) return;
@@ -104,7 +103,20 @@ export default function ClientesPage() {
     <>
       <PageHeader
         title="Clientes"
-        subtitle="Compradores, locatários e proprietários"
+        tabs={
+          <Tabs
+            label="Filtrar por tipo"
+            value={tipo}
+            onChange={(v) => setTipo(v as TipoCliente | "")}
+            options={[
+              { value: "" as TipoCliente | "", label: "Todos" },
+              ...TIPO_CLIENTE_OPTIONS.map((t) => ({
+                value: t as TipoCliente | "",
+                label: TIPO_CLIENTE_LABELS[t],
+              })),
+            ]}
+          />
+        }
         action={<Button size="sm" onClick={openCreate}>Cadastrar cliente</Button>}
       />
 
@@ -114,18 +126,7 @@ export default function ClientesPage() {
         searchPlaceholder="Buscar por nome ou email..."
         activeCount={activeFilterCount}
         onClear={clearFilters}
-      >
-        <FilterSelect
-          label="Tipo"
-          value={tipo}
-          onChange={(v) => setTipo(v as TipoCliente | "")}
-          options={TIPO_CLIENTE_OPTIONS.map((t) => ({
-            value: t,
-            label: TIPO_CLIENTE_LABELS[t],
-          }))}
-          className="w-40"
-        />
-      </FilterBar>
+      />
 
       {loading ? (
         <Card>
@@ -167,43 +168,37 @@ export default function ClientesPage() {
       ) : (
         <>
           {/* Desktop: tabela */}
-          <Card className="hidden overflow-hidden md:block">
-            <div className="overflow-x-auto">
+          <div className="hidden md:block">
+            <TableCard>
               <table className="w-full text-left">
-                <thead className="border-b border-border bg-elevated text-[11px] font-semibold uppercase tracking-wider text-faint">
+                <thead className="border-b border-border bg-elevated">
                   <tr>
-                    <th className="px-4 py-3">Nome</th>
-                    <th className="px-4 py-3">CPF</th>
-                    <th className="px-4 py-3">E-mail</th>
-                    <th className="px-4 py-3">Telefone</th>
-                    <th className="px-4 py-3">Tipo</th>
-                    <th className="px-4 py-3 text-right">Ações</th>
+                    <th className={TH_CLASS}>Nome</th>
+                    <th className={TH_CLASS}>CPF</th>
+                    <th className={TH_CLASS}>E-mail</th>
+                    <th className={TH_CLASS}>Telefone</th>
+                    <th className={TH_CLASS}>Tipo</th>
+                    <th className={`${TH_CLASS} text-right`}>Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {clientes.map((c) => (
                     <tr
                       key={c.id}
-                      className="transition-colors duration-150 hover:bg-hover"
+                      className="transition-colors duration-150 hover:bg-hover/50"
                     >
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
+                      <td className={`${TD_CLASS} font-medium text-foreground`}>
                         {c.nome}
                       </td>
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
-                        {c.cpf}
-                      </td>
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
-                        {c.email}
-                      </td>
-                      <td className="px-4 py-3.5 text-sm text-muted-foreground">
-                        {c.telefone}
-                      </td>
-                      <td className="px-4 py-3.5">
+                      <td className={TD_CLASS}>{c.cpf}</td>
+                      <td className={TD_CLASS}>{c.email}</td>
+                      <td className={TD_CLASS}>{c.telefone}</td>
+                      <td className={TD_CLASS}>
                         <Badge tone={TIPO_CLIENTE_TONE[c.tipoCliente]}>
                           {TIPO_CLIENTE_LABELS[c.tipoCliente]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className={TD_CLASS}>
                         <div className="flex items-center justify-end gap-1">
                           <IconAction
                             label="Editar"
@@ -225,8 +220,13 @@ export default function ClientesPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </Card>
+            </TableCard>
+            <TableFooter
+              count={clientes.length}
+              singular="cliente"
+              plural="clientes"
+            />
+          </div>
 
           {/* Mobile: cards empilhados */}
           <div className="flex flex-col gap-2 md:hidden">

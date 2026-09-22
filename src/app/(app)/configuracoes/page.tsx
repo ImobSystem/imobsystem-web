@@ -17,7 +17,6 @@ export default function ConfiguracoesPage() {
     <AdminOnly>
       <PageHeader
         title="Configurações"
-        subtitle="Personalize sua imobiliária"
       />
       <LogoSection />
     </AdminOnly>

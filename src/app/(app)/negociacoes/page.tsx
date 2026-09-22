@@ -8,7 +8,6 @@ import { ErrorState, LoadingState } from "@/components/ui/States";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { NegociacaoFormModal } from "@/components/negociacoes/NegociacaoFormModal";
-import { usePageAction } from "@/contexts/PageActionContext";
 import { imovelService } from "@/services/imovelService";
 import { clienteService } from "@/services/clienteService";
 import { negociacaoService } from "@/services/negociacaoService";
@@ -40,7 +39,6 @@ export default function NegociacoesPage() {
   // então não faz sentido filtrar por status de novo aqui.
   const [finalidade, setFinalidade] = useState<Finalidade | "">("");
 
-  usePageAction({ label: "Nova negociação", onClick: () => setFormOpen(true) });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,7 +109,6 @@ export default function NegociacoesPage() {
     <>
       <PageHeader
         title="Negociações"
-        subtitle="Funil de vendas e locações"
         action={
           <Button size="sm" onClick={() => setFormOpen(true)}>Nova negociação</Button>
         }
