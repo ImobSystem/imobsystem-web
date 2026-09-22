@@ -4,11 +4,11 @@ import { useImobiliaria } from "@/contexts/ImobiliariaContext";
 import { LogoMark } from "@/components/layout/LogoMark";
 
 /** Nome exibido quando ainda não sabemos o nome da imobiliária. */
-const NOME_PADRAO = "ImobSystem";
+const NOME_PADRAO = "Kaza System";
 
 /**
  * Identidade no topo da sidebar: avatar (logo da imobiliária ou o ícone do
- * ImobSystem, como marca padrão) + nome.
+ * Kaza System, como marca padrão) + nome.
  *
  * Não é um seletor: o usuário pertence a uma única imobiliária, então aqui
  * não existe chevron nem menu — seria prometer uma troca que não existe.
@@ -30,7 +30,7 @@ export function Brand() {
           />
         </div>
       ) : (
-        // Sem logo própria cadastrada: cai na marca do próprio ImobSystem.
+        // Sem logo própria cadastrada: cai na marca do próprio Kaza System.
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-subtle text-accent">
           <LogoMark className="h-4 w-4" />
         </div>

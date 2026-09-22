@@ -29,7 +29,7 @@ export function Header({ onMenuClick }: Props) {
   const breadcrumb = ROUTE_LABELS["/" + pathname.split("/")[1]] ?? "";
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-base px-4 transition-colors duration-200 sm:px-8">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-canvas px-4 transition-colors duration-200 sm:px-8">
       {/* Hambúrguer — só no mobile, abre a sidebar como drawer. */}
       <button
         type="button"

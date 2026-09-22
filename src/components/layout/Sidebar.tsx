@@ -170,7 +170,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: Props) {
 
       <aside
         className={
-          "fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r border-border bg-base " +
+          "fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r border-border bg-canvas " +
           "transition-transform duration-200 ease-out md:translate-x-0 " +
           (mobileOpen ? "translate-x-0" : "-translate-x-full")
         }
