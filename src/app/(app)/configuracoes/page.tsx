@@ -2,6 +2,7 @@
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LogoSection } from "@/components/configuracoes/LogoSection";
+import { AssinaturaSection } from "@/components/configuracoes/AssinaturaSection";
 import { AdminOnly } from "@/components/AdminOnly";
 
 /**
@@ -19,6 +20,7 @@ export default function ConfiguracoesPage() {
         title="Configurações"
       />
       <LogoSection />
+      <AssinaturaSection />
     </AdminOnly>
   );
 }

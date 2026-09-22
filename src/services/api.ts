@@ -54,6 +54,36 @@ api.interceptors.response.use(
     const url = error.config?.url ?? "";
     const isAuthRoute = url.includes("/auth/login");
 
+    /*
+     * 402 = PlanoInterceptor do backend recusando por assinatura vencida.
+     * Vem ANTES do 401/403 e NÃO limpa a sessão: o usuário continua logado —
+     * ele precisa estar para conseguir assinar.
+     *
+     * As telas de assinatura ficam de fora do redirecionamento: `/planos`
+     * chama a própria API de plano, e mandar o usuário embora no meio da
+     * escolha do plano o prenderia num vai-e-vem.
+     */
+    if (status === 402 && typeof window !== "undefined") {
+      const telasDeAssinatura = ["/plano-expirado", "/planos"];
+      if (!telasDeAssinatura.includes(window.location.pathname)) {
+        window.location.href = "/plano-expirado";
+      }
+      return Promise.reject(error);
+    }
+
+    /*
+     * 403 com código ACESSO_NEGADO vem do GlobalExceptionHandler do backend:
+     * o usuário está logado, só não tem permissão para AQUELA ação (ex: um
+     * CORRETOR tentando trocar o plano). Deslogar aqui seria errado — a tela
+     * precisa receber o erro para mostrar a mensagem.
+     *
+     * O 403 de token expirado é gerado pelo Spring Security e não traz esse código.
+     */
+    const data = error.response?.data as { error?: string } | undefined;
+    if (status === 403 && data?.error === "ACESSO_NEGADO") {
+      return Promise.reject(error);
+    }
+
     if ((status === 401 || status === 403) && !isAuthRoute) {
       clearSession();
 
