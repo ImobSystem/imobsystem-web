@@ -277,6 +277,53 @@ export const PERFIL_LABELS: Record<Perfil, string> = {
   CORRETOR: "Corretor",
 };
 
+/* ============================ Plano / assinatura ============================ */
+
+export type Plano = "BASICO" | "PROFISSIONAL" | "PREMIUM";
+
+/** Situação da assinatura da imobiliária. */
+export type StatusAssinatura =
+  | "TRIAL"
+  | "ATIVO"
+  | "INADIMPLENTE"
+  | "EXPIRADO"
+  | "CANCELADO";
+
+/** Resposta de GET /imobiliarias/plano. */
+export interface PlanoStatus {
+  plano: Plano;
+  statusPlano: StatusAssinatura;
+  /** ISO da data de vencimento, ou null enquanto não houver assinatura. */
+  dataVencimento: string | null;
+  diasRestantes: number;
+}
+
+/**
+ * Resposta de POST /imobiliarias/plano.
+ *
+ * `linkPagamento` é a URL do Asaas — o pagamento acontece lá, não aqui.
+ */
+export interface AssinarPlanoResposta {
+  plano: Plano;
+  status: StatusAssinatura;
+  linkPagamento: string;
+  proximoVencimento: string;
+}
+
+export const PLANO_LABELS: Record<Plano, string> = {
+  BASICO: "Básico",
+  PROFISSIONAL: "Profissional",
+  PREMIUM: "Premium",
+};
+
+export const STATUS_ASSINATURA_LABELS: Record<StatusAssinatura, string> = {
+  TRIAL: "Teste",
+  ATIVO: "Ativo",
+  INADIMPLENTE: "Inadimplente",
+  EXPIRADO: "Expirado",
+  CANCELADO: "Cancelado",
+};
+
 /* ============================ Chat (Imo) ============================ */
 
 /** Ação que o assistente executou no backend durante a conversa. */

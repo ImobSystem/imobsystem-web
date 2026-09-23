@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ImobiliariaProvider } from "@/contexts/ImobiliariaContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { PlanoBanner } from "@/components/layout/PlanoBanner";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 
 /**
@@ -37,6 +38,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <ChatWidget />
 
           <div className="flex min-h-screen flex-col md:ml-[248px]">
+            {/*
+             * O aviso fica dentro da coluna de conteúdo (e não `fixed` no
+             * topo da janela) para não passar por cima da sidebar, que é
+             * fixa à esquerda.
+             */}
+            <PlanoBanner />
             <Header onMenuClick={() => setMobileNavOpen(true)} />
             <main className="flex-1 overflow-x-hidden px-4 py-8 sm:px-8">
               <div className="mx-auto max-w-[1160px]">{children}</div>
