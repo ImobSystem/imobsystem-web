@@ -21,16 +21,19 @@ import { useAsyncList } from "@/hooks/useAsyncList";
 import { useDebounce } from "@/hooks/useDebounce";
 import { imovelService } from "@/services/imovelService";
 import { getErrorMessage } from "@/services/errors";
-import { STATUS_IMOVEL_TONE } from "@/lib/format";
+import { STATUS_IMOVEL_TONE, formatCurrency } from "@/lib/format";
 import { buildThumbUrl } from "@/lib/foto";
 import {
   FINALIDADE_LABELS,
   FINALIDADE_OPTIONS,
   STATUS_IMOVEL_LABELS,
   STATUS_IMOVEL_OPTIONS,
+  TIPO_IMOVEL_LABELS,
+  TIPO_IMOVEL_OPTIONS,
   type Finalidade,
   type Imovel,
   type StatusImovel,
+  type TipoImovel,
 } from "@/types";
 
 const EDIT_ICON = (
@@ -46,6 +49,16 @@ const DELETE_ICON = (
     <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
   </svg>
 );
+
+/**
+ * "Bairro, Cidade - UF" com o que estiver preenchido, ou `null` se nada foi
+ * informado — imóveis cadastrados antes desses campos existirem caem aqui.
+ */
+function localizacao(imovel: Imovel): string | null {
+  const cidadeUf = [imovel.cidade, imovel.estado].filter(Boolean).join(" - ");
+  const partes = [imovel.bairro, cidadeUf].filter(Boolean);
+  return partes.length > 0 ? partes.join(", ") : null;
+}
 
 function FotoThumb({ imovel }: { imovel: Imovel }) {
   if (imovel.fotos.length > 0) {
@@ -73,6 +86,7 @@ export default function ImoveisPage() {
   const [endereco, setEndereco] = useState("");
   const [status, setStatus] = useState<StatusImovel | "">("");
   const [finalidade, setFinalidade] = useState<Finalidade | "">("");
+  const [tipo, setTipo] = useState<TipoImovel | "">("");
   const debouncedEndereco = useDebounce(endereco, 400);
 
   const fetchImoveis = useCallback(
@@ -81,14 +95,15 @@ export default function ImoveisPage() {
         endereco: debouncedEndereco || undefined,
         status: status || undefined,
         finalidade: finalidade || undefined,
+        tipo: tipo || undefined,
       }),
-    [debouncedEndereco, status, finalidade],
+    [debouncedEndereco, status, finalidade, tipo],
   );
   const { data: imoveis, loading, error, reload } = useAsyncList(fetchImoveis);
 
   // Conta os filtros já digitados/selecionados (não espera o debounce) — o
   // botão "Limpar" e a mensagem de vazio reagem na hora.
-  const activeFilterCount = [endereco, status, finalidade].filter(
+  const activeFilterCount = [endereco, status, finalidade, tipo].filter(
     Boolean,
   ).length;
 
@@ -96,6 +111,7 @@ export default function ImoveisPage() {
     setEndereco("");
     setStatus("");
     setFinalidade("");
+    setTipo("");
   }
 
   // Modal de formulário: `editing` decide entre criar (null) e editar (Imovel).
@@ -161,6 +177,17 @@ export default function ImoveisPage() {
         onClear={clearFilters}
       >
         <FilterSelect
+          label="Tipo"
+          value={tipo}
+          onChange={(v) => setTipo(v as TipoImovel | "")}
+          options={TIPO_IMOVEL_OPTIONS.map((t) => ({
+            value: t,
+            label: TIPO_IMOVEL_LABELS[t],
+          }))}
+          allLabel="Todos os tipos"
+          className="w-[190px]"
+        />
+        <FilterSelect
           label="Finalidade"
           value={finalidade}
           onChange={(v) => setFinalidade(v as Finalidade | "")}
@@ -220,7 +247,9 @@ export default function ImoveisPage() {
                   <tr>
                     <th className={TH_CLASS}>Foto</th>
                     <th className={TH_CLASS}>Endereço</th>
+                    <th className={TH_CLASS}>Tipo</th>
                     <th className={TH_CLASS}>Área</th>
+                    <th className={TH_CLASS}>Valor</th>
                     <th className={TH_CLASS}>Finalidade</th>
                     <th className={TH_CLASS}>Status</th>
                     <th className={`${TH_CLASS} text-right`}>Ações</th>
@@ -238,11 +267,26 @@ export default function ImoveisPage() {
                       <td className={TD_CLASS}>
                         {imovel.endereco}
                         <span className="block text-[13px] text-faint">
-                          {imovel.CEP}
+                          {/* Bairro/cidade quando houver; senão o CEP, como antes. */}
+                          {localizacao(imovel) ?? imovel.CEP}
                         </span>
                       </td>
                       <td className={TD_CLASS}>
+                        {imovel.tipoImovel ? (
+                          <Badge>{TIPO_IMOVEL_LABELS[imovel.tipoImovel]}</Badge>
+                        ) : (
+                          <span className="text-faint">—</span>
+                        )}
+                      </td>
+                      <td className={TD_CLASS}>
                         {imovel.area_m2} m²
+                      </td>
+                      <td className={`${TD_CLASS} whitespace-nowrap`}>
+                        {imovel.valor !== null ? (
+                          formatCurrency(imovel.valor)
+                        ) : (
+                          <span className="text-faint">—</span>
+                        )}
                       </td>
                       <td className={TD_CLASS}>
                         {FINALIDADE_LABELS[imovel.finalidade]}
@@ -292,13 +336,24 @@ export default function ImoveisPage() {
                       {imovel.endereco}
                     </p>
                     <p className="truncate text-[13px] text-faint">
-                      {imovel.CEP}
+                      {localizacao(imovel) ?? imovel.CEP}
                     </p>
+                    {imovel.valor !== null && (
+                      <p className="mt-0.5 text-sm font-semibold text-foreground">
+                        {formatCurrency(imovel.valor)}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                  <p>{imovel.area_m2} m²</p>
-                  <p>{FINALIDADE_LABELS[imovel.finalidade]}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                  {imovel.tipoImovel && (
+                    <Badge>{TIPO_IMOVEL_LABELS[imovel.tipoImovel]}</Badge>
+                  )}
+                  <span>{imovel.area_m2} m²</span>
+                  <span aria-hidden className="text-faint">
+                    ·
+                  </span>
+                  <span>{FINALIDADE_LABELS[imovel.finalidade]}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <Badge tone={STATUS_IMOVEL_TONE[imovel.statusImovel]}>

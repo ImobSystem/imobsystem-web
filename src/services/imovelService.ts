@@ -12,6 +12,7 @@ export const imovelService = {
       endereco: filtros?.endereco,
       status: filtros?.status,
       finalidade: filtros?.finalidade,
+      tipo: filtros?.tipo,
     });
     return api.get<Imovel[]>(`/imoveis${query}`).then((r) => r.data);
   },

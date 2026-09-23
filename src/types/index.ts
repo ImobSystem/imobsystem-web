@@ -92,6 +92,51 @@ export interface AtualizarLogoRequest {
 export type Finalidade = "ALUGUEL" | "VENDA";
 export type StatusImovel = "DISPONIVEL" | "NEGOCIANDO" | "FECHADO";
 
+export type TipoImovel =
+  | "APARTAMENTO"
+  | "CASA"
+  | "TERRENO"
+  | "SALA_COMERCIAL"
+  | "LOJA"
+  | "GALPAO"
+  | "COBERTURA"
+  | "KITNET"
+  | "SITIO"
+  | "FAZENDA";
+
+export const TIPO_IMOVEL_OPTIONS: TipoImovel[] = [
+  "APARTAMENTO",
+  "CASA",
+  "TERRENO",
+  "SALA_COMERCIAL",
+  "LOJA",
+  "GALPAO",
+  "COBERTURA",
+  "KITNET",
+  "SITIO",
+  "FAZENDA",
+];
+
+export const TIPO_IMOVEL_LABELS: Record<TipoImovel, string> = {
+  APARTAMENTO: "Apartamento",
+  CASA: "Casa",
+  TERRENO: "Terreno",
+  SALA_COMERCIAL: "Sala comercial",
+  LOJA: "Loja",
+  GALPAO: "Galpão",
+  COBERTURA: "Cobertura",
+  KITNET: "Kitnet",
+  SITIO: "Sítio",
+  FAZENDA: "Fazenda",
+};
+
+/** As 27 unidades federativas, para o select de estado. */
+export const UF_OPTIONS = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
+  "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
+  "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+] as const;
+
 export interface Imovel {
   id: number;
   endereco: string;
@@ -102,6 +147,22 @@ export interface Imovel {
   imobiliariaId: number;
   /** URLs das fotos do imóvel (Cloudinary), na ordem cadastrada. */
   fotos: string[];
+
+  /*
+   * Campos adicionados depois do primeiro release: vêm `null` nos imóveis
+   * cadastrados antes deles existirem, então toda leitura na UI precisa
+   * tratar a ausência (mostrar "—", esconder a linha...).
+   */
+  tipoImovel: TipoImovel | null;
+  valor: number | null;
+  quartos: number | null;
+  banheiros: number | null;
+  vagasGaragem: number | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
+  descricao: string | null;
+  publicarPortais: boolean;
 }
 
 /** Corpo de POST/PUT /imoveis (sem imobiliariaId/corretor — vêm do token). */
@@ -111,6 +172,17 @@ export interface ImovelInput {
   area_m2: number;
   finalidade: Finalidade;
   statusImovel: StatusImovel;
+  /* Opcionais: o backend aceita o imóvel sem eles. */
+  tipoImovel?: TipoImovel;
+  valor?: number;
+  quartos?: number;
+  banheiros?: number;
+  vagasGaragem?: number;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  descricao?: string;
+  publicarPortais?: boolean;
 }
 
 /** Filtros de GET /imoveis — todos opcionais; omitidos = sem filtro. */
@@ -118,6 +190,7 @@ export interface ImovelFiltros {
   endereco?: string;
   status?: StatusImovel;
   finalidade?: Finalidade;
+  tipo?: TipoImovel;
 }
 
 /**
