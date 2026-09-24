@@ -35,7 +35,7 @@ export function FilterSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="h-10 w-full appearance-none rounded-lg border border-border bg-surface pl-3.5 pr-9 text-sm text-muted-foreground outline-none transition-colors duration-150 hover:border-border-strong focus:border-accent"
+        className="h-10 w-full appearance-none rounded-lg border border-border bg-surface pl-3.5 pr-9 text-sm text-muted-foreground outline-none transition-[border-color,box-shadow] duration-200 hover:border-border-strong focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-ring)]"
       >
         <option value="">{allLabel}</option>
         {options.map((opt) => (

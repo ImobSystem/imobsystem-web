@@ -71,7 +71,7 @@ function FotoThumb({ imovel }: { imovel: Imovel }) {
     );
   }
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-elevated text-faint">
+    <div className="foto-vazia flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-faint">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <rect x="3" y="3" width="18" height="18" rx="2" />
         <circle cx="9" cy="9" r="2" />
@@ -201,15 +201,15 @@ export default function ImoveisPage() {
       </FilterBar>
 
       {loading ? (
-        <Card>
+        <Card className="vidro">
           <LoadingState label="Carregando imóveis..." />
         </Card>
       ) : error ? (
-        <Card>
+        <Card className="vidro">
           <ErrorState message={error} onRetry={reload} />
         </Card>
       ) : imoveis.length === 0 ? (
-        <Card>
+        <Card className="vidro">
           {activeFilterCount > 0 ? (
             <EmptyState
               icon={
@@ -257,10 +257,7 @@ export default function ImoveisPage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {imoveis.map((imovel) => (
-                    <tr
-                      key={imovel.id}
-                      className="transition-colors duration-150 hover:bg-hover"
-                    >
+                    <tr key={imovel.id} className="group linha-hover">
                       <td className={TD_CLASS}>
                         <FotoThumb imovel={imovel} />
                       </td>
@@ -297,7 +294,11 @@ export default function ImoveisPage() {
                         </Badge>
                       </td>
                       <td className={TD_CLASS}>
-                        <div className="flex items-center justify-end gap-1">
+                        {/*
+                         * Ações só aparecem no hover da linha — e no foco pelo
+                         * teclado, senão sumiriam para quem navega sem mouse.
+                         */}
+                        <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100">
                           <IconAction
                             label="Editar"
                             onClick={() => openEdit(imovel)}

@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -51,6 +52,10 @@ interface CaptacoesChartProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  /** Corretor em foco; a barra dele fica cheia e as outras esmaecem. */
+  corretorSelecionado?: number | null;
+  /** Clique numa barra. Clicar na barra já selecionada manda `null` (limpa). */
+  onSelecionarCorretor?: (corretorId: number | null) => void;
 }
 
 /** Gráfico de barras horizontal com o total de imóveis captados por corretor — só ADMIN. */
@@ -59,7 +64,17 @@ export function CaptacoesChart({
   loading,
   error,
   onRetry,
+  corretorSelecionado = null,
+  onSelecionarCorretor,
 }: CaptacoesChartProps) {
+  const clicavel = Boolean(onSelecionarCorretor);
+
+  function alternar(captacao: Captacao) {
+    if (!onSelecionarCorretor) return;
+    onSelecionarCorretor(
+      captacao.corretorId === corretorSelecionado ? null : captacao.corretorId,
+    );
+  }
   const temDados = (data ?? []).some((c) => c.totalCaptacoes > 0);
   const chartHeight = Math.max(MIN_HEIGHT, (data?.length ?? 0) * ROW_HEIGHT);
 
@@ -68,9 +83,11 @@ export function CaptacoesChart({
       <h2 className="mb-4 text-base font-semibold text-foreground">
         Captações por corretor
       </h2>
-      <Card className="p-6">
+      <Card className="vidro p-6">
         <p className="mb-4 text-[13px] text-faint">
-          Imóveis captados por cada corretor
+          {clicavel
+            ? "Imóveis captados por cada corretor — clique numa barra para filtrar a atividade"
+            : "Imóveis captados por cada corretor"}
         </p>
 
         {loading ? (
@@ -118,10 +135,30 @@ export function CaptacoesChart({
                   />
                   <Bar
                     dataKey="totalCaptacoes"
-                    fill="var(--accent)"
                     radius={[0, 4, 4, 0]}
                     maxBarSize={28}
-                  />
+                    onClick={(_, indice) => {
+                      const item = (data ?? [])[indice];
+                      if (item) alternar(item);
+                    }}
+                    cursor={clicavel ? "pointer" : undefined}
+                    isAnimationActive
+                  >
+                    {/* Uma Cell por corretor: só assim dá para esmaecer as
+                        barras que não são a selecionada. */}
+                    {(data ?? []).map((captacao) => {
+                      const emFoco =
+                        corretorSelecionado === null ||
+                        corretorSelecionado === captacao.corretorId;
+                      return (
+                        <Cell
+                          key={captacao.corretorId}
+                          fill="var(--accent)"
+                          fillOpacity={emFoco ? 1 : 0.28}
+                        />
+                      );
+                    })}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>

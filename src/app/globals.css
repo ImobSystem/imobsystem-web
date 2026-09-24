@@ -221,6 +221,103 @@ body {
 
 /*
  * ============================================================
+ *  SUPERFICIES E INTERACOES — dashboard, listagens e tabelas
+ * ============================================================
+ */
+
+/*
+ * Glassmorphism que funciona nos DOIS temas.
+ *
+ * `bg-white/5 + border-white/10` só faz sentido no escuro — no tema claro o
+ * branco some no branco. Por isso as camadas saem dos tokens: a superficie
+ * com transparencia e a borda derivada da cor de texto, que inverte junto
+ * com o tema.
+ */
+.vidro {
+  background-color: color-mix(in srgb, var(--bg-surface) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 9%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/*
+ * Hover das linhas de tabela. Equivale ao `hover:bg-white/5`, mas derivado
+ * da cor de texto: no tema claro vira um cinza levissimo em vez de branco
+ * invisivel.
+ */
+.linha-hover {
+  transition: background-color 0.15s ease-out;
+}
+
+.linha-hover:hover {
+  background-color: color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+/*
+ * Placeholder de foto: gradiente estatico sutil em vez de cinza chapado —
+ * dá a leitura de "skeleton" sem animar nada (a lista pode ter dezenas).
+ */
+.foto-vazia {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--text-primary) 8%, transparent) 0%,
+    color-mix(in srgb, var(--text-primary) 3%, transparent) 50%,
+    color-mix(in srgb, var(--text-primary) 7%, transparent) 100%
+  );
+}
+
+/* Elevacao + brilho da marca no hover dos cards. */
+.dash-hover {
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    border-color 0.2s ease-out;
+}
+
+.dash-hover:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow:
+    0 12px 28px -12px rgba(0, 0, 0, 0.5),
+    0 0 20px -4px var(--accent-glow-outer);
+}
+
+/* Entrada em cascata: o atraso vem de --passo, setado inline em cada bloco. */
+.dash-entra {
+  animation: dash-sobe 0.5s ease-out backwards;
+  animation-delay: calc(var(--passo, 0) * 0.1s);
+}
+
+@keyframes dash-sobe {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Barra de taxa de ganho: anima a largura a partir de zero no carregamento. */
+.dash-barra {
+  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-entra {
+    animation: none;
+  }
+  .dash-hover:hover {
+    transform: none;
+  }
+  .dash-barra {
+    transition: none;
+  }
+}
+
+/*
+ * ============================================================
  *  TELA DE LOGIN — paleta propria, sempre escura
  * ============================================================
  * O login nao acompanha o tema claro/escuro do app: ele e uma "capa" fixa,

@@ -9,10 +9,14 @@ import type { ReactNode } from "react";
 export const TH_CLASS = "px-4 py-2.5 text-[13px] font-medium text-faint";
 export const TD_CLASS = "px-4 py-3 text-sm text-muted-foreground";
 
-/** Container da tabela: borda hairline, cantos de 12px, sem sombra. */
+/**
+ * Container da tabela: mesma superfície de vidro dos cards do dashboard
+ * (`.vidro` — translúcida + blur, derivada dos tokens para valer nos dois
+ * temas). A borda vem da própria classe, por isso não há `border-border`.
+ */
 export function TableCard({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+    <div className="vidro overflow-hidden rounded-xl">
       <div className="overflow-x-auto">{children}</div>
     </div>
   );

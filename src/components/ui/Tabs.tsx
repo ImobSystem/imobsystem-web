@@ -42,10 +42,14 @@ export function Tabs<T extends string>({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={
-              "whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] transition-colors duration-150 " +
+              "whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] " +
+              "transition-all duration-300 " +
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-ring)] " +
               (active
-                ? "bg-elevated font-medium text-foreground"
-                : "text-muted-foreground hover:bg-hover/60 hover:text-foreground")
+                ? // Pílula sólida invertida: o contraste sai dos tokens, então
+                  // vira clara no tema escuro e escura no claro, sem hardcode.
+                  "bg-foreground font-semibold text-canvas shadow-sm"
+                : "text-muted-foreground hover:bg-hover hover:text-foreground")
             }
           >
             {opt.label}

@@ -30,7 +30,9 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${TONE_CLASSES[tone]} ${className}`}
+      // O anel interno de 1px na própria cor recorta a pílula do fundo sem
+      // precisar aumentar a opacidade do preenchimento.
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ring-current/20 ${TONE_CLASSES[tone]} ${className}`}
     >
       {children}
     </span>

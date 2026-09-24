@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/States";
@@ -11,6 +18,7 @@ import { corretorService } from "@/services/corretorService";
 import { clienteService } from "@/services/clienteService";
 import { negociacaoService } from "@/services/negociacaoService";
 import { getErrorMessage } from "@/services/errors";
+import { useCountUp } from "@/hooks/useCountUp";
 import {
   formatCurrency,
   formatDate,
@@ -24,6 +32,7 @@ import {
   type Corretor,
   type Imovel,
   type Negociacao,
+  type StatusNegocio,
 } from "@/types";
 
 /**
@@ -78,6 +87,9 @@ const ICON_PROPS = {
 export default function DashboardPage() {
   const { user } = useAuth();
   const isAdmin = user?.perfil === "ADMIN";
+
+  /** Corretor selecionado no gráfico de captações (null = todos). */
+  const [corretorFiltro, setCorretorFiltro] = useState<number | null>(null);
   const [data, setData] = useState<DashboardData>(EMPTY);
   const [loading, setLoading] = useState(true);
   // Seções que falharam ao carregar (ex.: ["Corretores"]).
@@ -186,8 +198,22 @@ export default function DashboardPage() {
   const imovelById = new Map((data.imoveis ?? []).map((i) => [i.id, i]));
   const clienteById = new Map((data.clientes ?? []).map((c) => [c.id, c]));
 
+  /*
+   * Filtro vindo do gráfico: clicar na barra de um corretor recorta a lista
+   * de atividade. É filtro de verdade (Negociacao carrega `corretorId`), não
+   * mock — e roda no cliente, sobre os dados já em memória, sem nova request.
+   */
+  const corretorEmFoco =
+    corretorFiltro === null
+      ? null
+      : (captacoes ?? []).find((c) => c.corretorId === corretorFiltro) ?? null;
+
+  const negociacoesVisiveis = (data.negociacoes ?? []).filter(
+    (n) => corretorFiltro === null || n.corretorId === corretorFiltro,
+  );
+
   // Últimas 5 negociações (id desc como proxy de "mais recentes").
-  const recentes = [...(data.negociacoes ?? [])]
+  const recentes = [...negociacoesVisiveis]
     .sort((a, b) => b.id - a.id)
     .slice(0, 5);
 
@@ -219,42 +245,53 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Stats com hierarquia: 1 card grande + 3 pequenos — nunca 4 iguais. */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+      {/*
+       * Bento assimétrico: o card principal ocupa 2 colunas e 2 linhas à
+       * esquerda; à direita, dois cards pequenos em cima e um largo embaixo.
+       * É isso que come o espaço morto que sobrava ao lado do card grande.
+       */}
+      <div
+        className="dash-entra grid grid-cols-1 gap-4 lg:grid-cols-4 lg:gap-5"
+        style={{ "--passo": 1 } as CSSProperties}
+      >
         {/* Card grande — a métrica mais importante do negócio. */}
-        <Card className="p-7">
+        <Card className="vidro dash-hover flex flex-col p-7 lg:col-span-2 lg:row-span-2">
           <p className="text-xs font-semibold uppercase tracking-[0.06em] text-faint">
             {isAdmin ? "Negociações ativas" : "Minhas negociações ativas"}
           </p>
           {loading ? (
-            <div className="mt-2 h-12 w-20 animate-pulse rounded bg-elevated" />
+            <div className="mt-2 h-14 w-24 animate-pulse rounded bg-elevated" />
           ) : (
-            <p className="mt-2 text-5xl font-bold text-foreground">
-              {cardValue(data.negociacoes === null ? null : ativas.length)}
-            </p>
+            <NumeroGrande
+              valor={data.negociacoes === null ? null : ativas.length}
+            />
           )}
           <p className="mt-3 text-[13px] text-faint">
             {data.negociacoes === null
               ? "Não foi possível carregar."
               : `${formatCurrency(valorEmCarteira)} em carteira`}
           </p>
+
           {data.negociacoes !== null && negociacoes.length > 0 && (
-            <div className="mt-4">
-              <div className="h-1 overflow-hidden rounded-full bg-elevated">
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{ width: `${taxaGanho}%` }}
-                />
+            <>
+              <div className="mt-5">
+                <BarraTaxa taxa={taxaGanho} />
+                <p className="mt-2 text-[13px] text-faint">
+                  {taxaGanho}% de taxa de ganho
+                </p>
               </div>
-              <p className="mt-2 text-[13px] text-faint">
-                {taxaGanho}% de taxa de ganho
-              </p>
-            </div>
+
+              {/* Preenche a base do card com o recorte que sustenta a taxa
+                  acima, em vez de deixar o espaço vazio. */}
+              <div className="mt-auto grid grid-cols-2 gap-3 pt-6">
+                <Recorte rotulo="Ganhas" valor={ganhas.length} destaque />
+                <Recorte rotulo="Em aberto" valor={ativas.length} />
+              </div>
+            </>
           )}
         </Card>
 
-        {/* 3 cards pequenos, empilhados. */}
-        <div className="grid grid-cols-1 gap-4 lg:gap-6">
+        {/* Cards menores: dois em cima, um largo embaixo. */}
           <MiniStat
             label={isAdmin ? "Imóveis" : "Meus imóveis"}
             value={cardValue(data.imoveis?.length ?? null)}
@@ -297,10 +334,12 @@ export default function DashboardPage() {
               }
             />
           )}
+          {/* Card largo: fecha a linha de baixo do bento. */}
           <MiniStat
             label={isAdmin ? "Clientes" : "Meus clientes"}
             value={cardValue(data.clientes?.length ?? null)}
             loading={loading}
+            className="lg:col-span-2"
             icon={
               <svg {...ICON_PROPS}>
                 <circle cx="12" cy="8" r="4" />
@@ -308,15 +347,43 @@ export default function DashboardPage() {
               </svg>
             }
           />
-        </div>
       </div>
 
       {/* Atividade recente — lista, não tabela. */}
-      <div className="mt-8">
-        <h2 className="mb-4 text-base font-semibold text-foreground">
-          Atividade recente
-        </h2>
-        <Card className="overflow-hidden">
+      <div
+        className="dash-entra mt-8"
+        style={{ "--passo": 2 } as CSSProperties}
+      >
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <h2 className="text-base font-semibold text-foreground">
+            Atividade recente
+          </h2>
+
+          {/* Chip do filtro vindo do gráfico — e a saída dele. */}
+          {corretorEmFoco && (
+            <button
+              type="button"
+              onClick={() => setCorretorFiltro(null)}
+              className="animate-fade-in inline-flex items-center gap-1.5 rounded-full bg-accent-subtle px-2.5 py-1 text-xs font-medium text-accent transition-opacity duration-150 hover:opacity-80"
+            >
+              {corretorEmFoco.nomeCorretor}
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                aria-hidden
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+              <span className="sr-only">Limpar filtro</span>
+            </button>
+          )}
+        </div>
+        <Card className="vidro overflow-hidden">
           {loading ? (
             <div className="divide-y divide-border">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -360,12 +427,10 @@ export default function DashboardPage() {
                 return (
                   <li
                     key={n.id}
-                    className="flex items-center gap-4 px-5 py-4 transition-colors duration-150 hover:bg-hover"
+                    className="group flex items-center gap-4 px-5 py-4 transition-colors duration-150 hover:bg-hover"
                   >
-                    <span
-                      className={`h-2 w-2 shrink-0 rounded-full ${STATUS_NEGOCIO_DOT[n.statusNegocio]}`}
-                      aria-hidden
-                    />
+                    <PontoStatus status={n.statusNegocio} />
+
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">
                         {imovel?.endereco ?? `Imóvel #${n.imovelId}`}
@@ -375,6 +440,37 @@ export default function DashboardPage() {
                         {formatDate(n.dataInicio)}
                       </p>
                     </div>
+
+                    {/*
+                     * Ações inline: ocultas por padrão, entram no hover da
+                     * linha (e no foco pelo teclado, senão some para quem
+                     * navega sem mouse).
+                     */}
+                    <div className="flex items-center gap-1 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100">
+                      <AcaoLinha
+                        href="/negociacoes"
+                        titulo="Abrir no funil"
+                        icone={
+                          <>
+                            <path d="M15 3h6v6" />
+                            <path d="M10 14 21 3" />
+                            <path d="M21 14v7H3V3h7" />
+                          </>
+                        }
+                      />
+                      {isAdmin && (
+                        <AcaoLinha
+                          titulo="Filtrar por este corretor"
+                          onClick={() => setCorretorFiltro(n.corretorId)}
+                          icone={
+                            <>
+                              <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+                            </>
+                          }
+                        />
+                      )}
+                    </div>
+
                     <span className="text-sm font-semibold text-foreground">
                       {formatCurrency(n.valor)}
                     </span>
@@ -390,12 +486,16 @@ export default function DashboardPage() {
       </div>
 
       {isAdmin && (
-        <CaptacoesChart
-          data={captacoes}
-          loading={captacoesLoading}
-          error={captacoesError}
-          onRetry={loadCaptacoes}
-        />
+        <div className="dash-entra" style={{ "--passo": 3 } as CSSProperties}>
+          <CaptacoesChart
+            data={captacoes}
+            loading={captacoesLoading}
+            error={captacoesError}
+            onRetry={loadCaptacoes}
+            corretorSelecionado={corretorFiltro}
+            onSelecionarCorretor={setCorretorFiltro}
+          />
+        </div>
       )}
     </>
   );
@@ -422,6 +522,7 @@ function MiniStat({
   loading,
   icon,
   accent = false,
+  className = "",
 }: {
   label: string;
   value: number | string;
@@ -429,9 +530,16 @@ function MiniStat({
   icon: ReactNode;
   /** Destaca o ícone em laranja — usado no card pessoal "Minhas captações". */
   accent?: boolean;
+  className?: string;
 }) {
+  // "—" (métrica que não carregou) não conta; número conta.
+  const numero = typeof value === "number" ? value : null;
+  const animado = useCountUp(numero);
+
   return (
-    <Card className="flex items-center justify-between p-5">
+    <Card
+      className={`vidro dash-hover flex items-center justify-between p-5 ${className}`}
+    >
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-wider text-faint">
           {label}
@@ -439,12 +547,174 @@ function MiniStat({
         {loading ? (
           <div className="mt-1.5 h-7 w-10 animate-pulse rounded bg-elevated" />
         ) : (
-          <p className="mt-1.5 text-[28px] font-bold text-foreground">
-            {value}
+          <p className={`mt-1.5 text-[28px] ${GRADIENTE_NUMERO}`}>
+            {numero === null ? value : animado}
           </p>
         )}
       </div>
       <MiniIcon accent={accent}>{icon}</MiniIcon>
     </Card>
+  );
+}
+
+/**
+ * Número da métrica principal: peso extra e preenchimento em gradiente.
+ *
+ * O gradiente sai dos tokens de texto (e não de um branco fixo) para não
+ * sumir no tema claro, onde a escala inverte.
+ */
+const GRADIENTE_NUMERO =
+  "bg-gradient-to-b from-[var(--text-primary)] to-[var(--text-muted)] " +
+  "bg-clip-text font-extrabold tracking-tight text-transparent";
+
+function NumeroGrande({ valor }: { valor: number | null }) {
+  const animado = useCountUp(valor);
+  return (
+    <p className={`mt-2 text-6xl leading-none ${GRADIENTE_NUMERO}`}>
+      {animado === null ? "—" : animado}
+    </p>
+  );
+}
+
+/** Barra da taxa de ganho — cresce de 0% até o valor real ao montar. */
+function BarraTaxa({ taxa }: { taxa: number }) {
+  const [largura, setLargura] = useState(0);
+
+  useEffect(() => {
+    // Sem animação: vai direto ao valor, sem depender de requestAnimationFrame.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setLargura(taxa);
+      return;
+    }
+    // Um frame com 0% antes de ir ao valor final: sem isso o browser pinta
+    // já na largura certa e a transição não acontece.
+    const frame = requestAnimationFrame(() => setLargura(taxa));
+    return () => cancelAnimationFrame(frame);
+  }, [taxa]);
+
+  return (
+    <div
+      className="h-1.5 overflow-hidden rounded-full bg-elevated"
+      role="progressbar"
+      aria-valuenow={taxa}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="Taxa de ganho"
+    >
+      <div
+        className="dash-barra h-full rounded-full bg-accent"
+        style={{ width: `${largura}%` }}
+      />
+    </div>
+  );
+}
+
+/** Negócios abertos ainda se mexem — só eles pulsam. */
+const STATUS_EM_ANDAMENTO: StatusNegocio[] = [
+  "OPORTUNIDADE",
+  "EM_ATENDIMENTO",
+  "VISITA_AGENDADA",
+  "PROPOSTA",
+];
+
+/**
+ * Ponto de status da linha.
+ *
+ * O halo pulsante fica só nos negócios em andamento: piscar num "Ganho" ou
+ * "Perdido" sugeriria movimento onde o caso já fechou.
+ */
+function PontoStatus({ status }: { status: StatusNegocio }) {
+  const cor = STATUS_NEGOCIO_DOT[status];
+  const pulsa = STATUS_EM_ANDAMENTO.includes(status);
+
+  return (
+    <span className="relative flex h-2 w-2 shrink-0" aria-hidden>
+      {pulsa && (
+        <span
+          className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 ${cor}`}
+        />
+      )}
+      <span className={`relative inline-flex h-2 w-2 rounded-full ${cor}`} />
+    </span>
+  );
+}
+
+/** Botão/atalho de ação que aparece no hover da linha de atividade. */
+function AcaoLinha({
+  titulo,
+  icone,
+  href,
+  onClick,
+}: {
+  titulo: string;
+  icone: ReactNode;
+  href?: string;
+  onClick?: () => void;
+}) {
+  const classe =
+    "flex h-7 w-7 items-center justify-center rounded-md text-faint " +
+    "transition-colors duration-150 hover:bg-elevated hover:text-foreground " +
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-ring)]";
+
+  const svg = (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {icone}
+    </svg>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} title={titulo} aria-label={titulo} className={classe}>
+        {svg}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={titulo}
+      aria-label={titulo}
+      className={classe}
+    >
+      {svg}
+    </button>
+  );
+}
+
+/** Mini-recorte na base do card grande (ganhas / em aberto). */
+function Recorte({
+  rotulo,
+  valor,
+  destaque = false,
+}: {
+  rotulo: string;
+  valor: number;
+  destaque?: boolean;
+}) {
+  const animado = useCountUp(valor);
+  return (
+    <div className="rounded-lg border border-border bg-elevated/50 px-3 py-2.5">
+      <p className="text-[11px] uppercase tracking-wider text-faint">{rotulo}</p>
+      <p
+        className={
+          "mt-0.5 text-lg font-bold " +
+          (destaque ? "text-success" : "text-foreground")
+        }
+      >
+        {animado}
+      </p>
+    </div>
   );
 }
